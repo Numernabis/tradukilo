@@ -1,1 +1,25 @@
-2-"ALA";
+# control flow instruction
+
+
+
+while(1 == 1)
+    if(i<=N/16){
+        2+2;
+    }
+    else{
+        break;
+    }
+
+while(1 == 1)
+    if(i<=N/16)
+        print 1;
+    else
+        break;
+    
+{
+  N = 100;
+  M = 200;  
+}
+
+
+

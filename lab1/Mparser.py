@@ -19,9 +19,29 @@ def p_error(p):
     else:
         print("Unexpected end of input")
 
-def p_start(p):
-    """start : start expr
-             | expr"""
+def p_program(p):
+    """program : instr_rec
+               | """
+
+def p_instr_rec(p):
+    """instr_rec : instr_rec instr
+                 | instr"""
+
+def p_instr(p):
+    """instr : instr_colon ';'
+             | instr_coloff"""
+
+def p_instr_colon(p):
+    """instr_colon : assign
+                   | expr
+                   | print
+                   | return"""
+
+def p_instr_coloff(p):
+    """instr_coloff : for
+                   | while
+                   | block
+                   | if"""
 
 def p_expr_1(p):
     """expr : expr '+' expr
@@ -35,27 +55,114 @@ def p_expr_2(p):
             | STRING
             | ID"""
 
+def p_expr_3(p):
+    """expr : ZEROS '(' INTNUM ')'
+            | ONES '(' INTNUM ')'
+            | EYE '(' INTNUM ')'"""
 
-# def p_program(p):
-#     """program : instructions_opt"""
+def p_expr_4(p):
+    """expr : expr DOTADD expr
+            | expr DOTSUB expr
+            | expr DOTDIV expr
+            | expr DOTMUL expr"""
 
-# def p_instructions_opt_1(p):
-#     """instructions_opt : instructions """
+def p_expr_5(p):
+    """expr : '-' expr
+            | '(' expr ')'"""
 
-# def p_instructions_opt_2(p):
-#     """instructions_opt : """
+def p_expr_6(p):
+    """expr : '[' rows ']'"""
 
-# def p_instructions_1(p):
-#     """instructions : instructions instruction """
+def p_expr_rel(p):
+    """expr_rel : expr GTE expr
+                | expr LTE expr
+                | expr NEQ expr
+                | expr EQ expr
+                | expr GT expr
+                | expr LT expr"""
 
-# def p_instructions_2(p):
-#     """instructions : instruction """
+def p_rows(p):
+    """rows : rows ',' row
+            | row"""
 
-# to finish the grammar
-# ....
+def p_row(p):
+    """row : '[' cells ']'"""
 
+def p_if(p):
+    """if : IF '(' expr_rel ')' inside_if
+          | IF '(' expr_rel ')' inside_if ELSE inside_if"""
 
-    
+def p_inside_if(p):
+    """inside_if : instr"""
+    # nie potrzebne bo da sie dojsc przez instr do block
+                #  | block"""
 
+def p_if_inside_loop(p):
+    """if_inside_loop : IF '(' expr_rel ')' inside_loop
+                      | IF '(' expr_rel ')' inside_loop ELSE inside_loop"""
+
+def p_for(p):
+    """for : FOR ID '=' id_or_intnum ':' id_or_intnum inside_loop"""
+
+def p_while(p):
+    """while : WHILE '(' expr_rel ')' inside_loop"""
+
+def p_inside_loop(p):
+    """inside_loop : block_loop
+                   | BREAK ';'
+                   | CONTINUE ';'
+                   | if_inside_loop
+                   | instr"""
+
+def p_block_loop(p):
+    """block_loop : '{' inside_loop_rec '}'"""
+
+def p_inside_loop_rec(p):
+    """inside_loop_rec : inside_loop_rec instr_inside_loop
+                       | instr_inside_loop"""
+
+def p_instr_inside_loop(p):
+    """instr_inside_loop : instr_rec
+                         | block_loop
+                         | BREAK ';'
+                         | CONTINUE ';'
+                         | if_inside_loop"""
+
+def p_print(p):
+    """print : PRINT cells"""
+
+def p_block(p):
+    """block : '{' instr_rec '}'"""
+
+def p_assign(p):
+    """assign : id '=' expr
+              | id ADDASSIGN expr
+              | id SUBASSIGN expr
+              | id MULASSIGN expr
+              | id DIVASSIGN expr"""
+
+def p_cells(p):
+    """cells : cells ',' expr
+             | expr"""
+
+# poprawic to ponizej bo moze rozne rzeczy zwracac
+def p_return(p):
+    """return : RETURN INTNUM"""
+
+def p_id(p):
+    """id : ID
+          | cell"""
+
+def p_cell(p):
+    """cell : ID '[' index ',' index ']'"""
+
+def p_index(p):
+    """index : ID
+             | INTNUM"""    
+
+# potrzebne do for'a
+def p_id_or_intnum(p):
+    """id_or_intnum : INTNUM
+                    | ID"""
 
 parser = yacc.yacc()
