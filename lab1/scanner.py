@@ -75,7 +75,7 @@ def t_INTNUM(t):
     return t
 
 # stringi
-t_STRING = r'\".*\"'
+t_STRING = r'\".*?\"'
 
 # --------------- --------------- ---------------
 # znaki pomijane
