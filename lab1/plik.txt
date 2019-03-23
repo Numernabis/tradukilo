@@ -1,25 +1,16 @@
-# control flow instruction
-
-
-
 while(1 == 1)
     if(i<=N/16){
         2+2;
+        break;
     }
     else{
         break;
     }
-
-while(1 == 1)
-    if(i<=N/16)
-        print 1;
-    else
-        break;
     
-{
-  N = 100;
-  M = 200;  
-}
-
+while(2==2)
+if(2==2)
+    break;
+else if(3==4)
+break;
 
 

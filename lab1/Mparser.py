@@ -43,6 +43,17 @@ def p_instr_coloff(p):
                    | block
                    | if"""
 
+def p_instr_2(p):
+    """instr_2 : instr_colon ';'
+             | instr_coloff_2"""
+
+
+def p_instr_coloff_2(p):
+    """instr_coloff_2 : for
+                   | while
+                   | block_loop
+                   | if_inside_loop"""
+
 def p_expr_1(p):
     """expr : expr '+' expr
             | expr '-' expr
@@ -108,11 +119,12 @@ def p_while(p):
     """while : WHILE '(' expr_rel ')' inside_loop"""
 
 def p_inside_loop(p):
-    """inside_loop : block_loop
-                   | BREAK ';'
-                   | CONTINUE ';'
-                   | if_inside_loop
-                   | instr"""
+    """inside_loop : break_continue ';'
+                   | instr_2"""
+
+def p_break_continue(p):
+    """break_continue : BREAK
+                      | CONTINUE"""
 
 def p_block_loop(p):
     """block_loop : '{' inside_loop_rec '}'"""
@@ -122,11 +134,8 @@ def p_inside_loop_rec(p):
                        | instr_inside_loop"""
 
 def p_instr_inside_loop(p):
-    """instr_inside_loop : instr_rec
-                         | block_loop
-                         | BREAK ';'
-                         | CONTINUE ';'
-                         | if_inside_loop"""
+    """instr_inside_loop : break_continue ';'
+                         | instr_2"""
 
 def p_print(p):
     """print : PRINT cells"""
