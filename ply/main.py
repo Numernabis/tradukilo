@@ -31,5 +31,14 @@ if __name__ == '__main__':
 
     parser = Mparser.parser
     p = parser.parse(text, lexer=lexer)
-    print(p)
-        
+    #print(p)
+    
+    i = 0
+    while (i < len(p)):
+        a = p[i]
+        print(a[0])
+        j = 1
+        while (j < len(a)):
+            print('  ', a[j])
+            j += 1
+        i += 1

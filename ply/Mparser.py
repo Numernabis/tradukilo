@@ -8,7 +8,7 @@ tokens = scanner.tokens
 
 precedence = (
     ('nonassoc', '=', 'ADDASSIGN', 'SUBASSIGN', 'MULASSIGN', 'DIVASSIGN'),
-    ('nonassoc', 'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT', 'ELSE'),
+    ('nonassoc', 'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT'),
     ('left', '+', '-', 'DOTADD', 'DOTSUB'),
     ('left', '*', '/', 'DOTMUL', 'DOTDIV'),
     ('right', 'UMINUS'),    # Unary minus operator
@@ -98,7 +98,7 @@ def p_expr_5(p):
 
 def p_expr_6(p):
     """expr : '-' expr %prec UMINUS"""
-    p[0] = -p[2]
+    p[0] = ('UMINUS', p[2])
 
 def p_expr_7(p):
     """expr : expr '\\''"""
@@ -151,7 +151,7 @@ def p_for(p):
 
 def p_while(p):
     """while : WHILE '(' expr_rel ')' inside_loop"""
-    p[0] = ('WHILE', p[3], [5])
+    p[0] = ('WHILE', p[3], p[5])
 
 def p_inside_loop(p):
     """inside_loop : break_continue ';'
