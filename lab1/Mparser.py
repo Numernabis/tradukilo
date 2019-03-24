@@ -39,20 +39,19 @@ def p_instr_colon(p):
 
 def p_instr_coloff(p):
     """instr_coloff : for
-                   | while
-                   | block
-                   | if"""
+                    | while
+                    | block
+                    | if"""
 
-def p_instr_2(p):
-    """instr_2 : instr_colon ';'
-             | instr_coloff_2"""
+def p_instr_inside_loop(p):
+    """instr_inside_loop : instr_colon ';'
+                         | instr_coloff_inside_loop"""
 
-
-def p_instr_coloff_2(p):
-    """instr_coloff_2 : for
-                   | while
-                   | block_loop
-                   | if_inside_loop"""
+def p_instr_coloff_inside_loop(p):
+    """instr_coloff_inside_loop : for
+                                | while
+                                | block_loop
+                                | if_inside_loop"""
 
 def p_expr_1(p):
     """expr : expr '+' expr
@@ -79,7 +78,8 @@ def p_expr_4(p):
 
 def p_expr_5(p):
     """expr : '-' expr
-            | '(' expr ')'"""
+            | '(' expr ')'
+            | expr '\\'' """
 
 def p_expr_6(p):
     """expr : '[' rows ']'"""
@@ -100,13 +100,8 @@ def p_row(p):
     """row : '[' cells ']'"""
 
 def p_if(p):
-    """if : IF '(' expr_rel ')' inside_if
-          | IF '(' expr_rel ')' inside_if ELSE inside_if"""
-
-def p_inside_if(p):
-    """inside_if : instr"""
-    # nie potrzebne bo da sie dojsc przez instr do block
-                #  | block"""
+    """if : IF '(' expr_rel ')' instr
+          | IF '(' expr_rel ')' instr ELSE instr"""
 
 def p_if_inside_loop(p):
     """if_inside_loop : IF '(' expr_rel ')' inside_loop
@@ -120,22 +115,14 @@ def p_while(p):
 
 def p_inside_loop(p):
     """inside_loop : break_continue ';'
-                   | instr_2"""
-
-def p_break_continue(p):
-    """break_continue : BREAK
-                      | CONTINUE"""
+                   | instr_inside_loop"""
 
 def p_block_loop(p):
     """block_loop : '{' inside_loop_rec '}'"""
 
 def p_inside_loop_rec(p):
-    """inside_loop_rec : inside_loop_rec instr_inside_loop
-                       | instr_inside_loop"""
-
-def p_instr_inside_loop(p):
-    """instr_inside_loop : break_continue ';'
-                         | instr_2"""
+    """inside_loop_rec : inside_loop_rec inside_loop
+                       | inside_loop"""
 
 def p_print(p):
     """print : PRINT cells"""
@@ -154,9 +141,8 @@ def p_cells(p):
     """cells : cells ',' expr
              | expr"""
 
-# poprawic to ponizej bo moze rozne rzeczy zwracac
 def p_return(p):
-    """return : RETURN INTNUM"""
+    """return : RETURN expr"""
 
 def p_id(p):
     """id : ID
@@ -173,5 +159,9 @@ def p_index(p):
 def p_id_or_intnum(p):
     """id_or_intnum : INTNUM
                     | ID"""
+
+def p_break_continue(p):
+    """break_continue : BREAK
+                      | CONTINUE"""
 
 parser = yacc.yacc()
