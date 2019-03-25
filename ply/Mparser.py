@@ -76,14 +76,15 @@ def p_expr_2(p):
     """expr : INTNUM
             | FLOATNUM
             | STRING
-            | ID"""
+            | ID
+            | expr_rel"""
     p[0] = p[1]
 
 def p_expr_3(p):
     """expr : ZEROS '(' INTNUM ')'
             | ONES '(' INTNUM ')'
             | EYE '(' INTNUM ')'"""
-    p[0] = (p[1], p[3], p[3])
+    p[0] = (p[1], p[3])
 
 def p_expr_4(p):
     """expr : expr DOTADD expr

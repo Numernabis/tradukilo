@@ -3,7 +3,7 @@
 # transposition
 
 C = -A;     # assignemnt with unary expression
-C = B' ;    # assignemnt with matrix transpose
+C = B';    # assignemnt with matrix transpose
 C = A+B ;   # assignemnt with binary addition
 C = A-B ;   # assignemnt with binary substraction
 C = A*B ;   # assignemnt with binary multiplication
@@ -18,3 +18,5 @@ C -= B ;  # substract B from C
 C *= A ;  # multiply A with C
 C /= A ;  # divide A by C
 
+
+1 <= 2;
