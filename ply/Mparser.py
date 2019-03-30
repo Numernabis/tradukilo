@@ -2,7 +2,7 @@
 
 import scanner
 import ply.yacc as yacc
-
+from AST import *
 
 tokens = scanner.tokens
 
@@ -11,7 +11,7 @@ precedence = (
     ('nonassoc', 'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT'),
     ('left', '+', '-', 'DOTADD', 'DOTSUB'),
     ('left', '*', '/', 'DOTMUL', 'DOTDIV'),
-    ('right', 'UMINUS'),    # Unary minus operator
+    ('right', 'UMINUS', '\''),    # Unary minus operator
 )
 
 
@@ -70,7 +70,7 @@ def p_expr_1(p):
             | expr '-' expr
             | expr '/' expr
             | expr '*' expr"""
-    p[0] = (p[2], p[1], p[3])
+    p[0] = BinExpr(p[2],p[1],p[3]) 
 
 def p_expr_2(p):
     """expr : INTNUM
@@ -78,20 +78,21 @@ def p_expr_2(p):
             | STRING
             | ID
             | expr_rel"""
-    p[0] = p[1]
+    # dodac sprawdzanie czym jest tak naprawde
+    p[0] = IntNum(p[1])
 
 def p_expr_3(p):
     """expr : ZEROS '(' INTNUM ')'
             | ONES '(' INTNUM ')'
             | EYE '(' INTNUM ')'"""
-    p[0] = (p[1], p[3])
+    p[0] = MatrixSpecialMethod(p[1],IntNum(p[3]))
 
 def p_expr_4(p):
     """expr : expr DOTADD expr
             | expr DOTSUB expr
             | expr DOTDIV expr
             | expr DOTMUL expr"""
-    p[0] = (p[2], p[1], p[3])
+    p[0] = BinExpr(p[2], p[1], p[3])
 
 def p_expr_5(p):
     """expr : '(' expr ')'"""
@@ -99,15 +100,15 @@ def p_expr_5(p):
 
 def p_expr_6(p):
     """expr : '-' expr %prec UMINUS"""
-    p[0] = ('UMINUS', p[2])
+    p[0] = UMinus(p[2])
 
 def p_expr_7(p):
     """expr : expr '\\''"""
-    p[0] = ('TRANSPOSE', p[1])
+    p[0] = Transpose(p[1])
 
 def p_expr_8(p):
     """expr : '[' rows ']'"""
-    p[0] = p[2]
+    p[0] = Matrix(p[2])
 
 def p_expr_rel(p):
     """expr_rel : expr GTE expr
@@ -116,7 +117,7 @@ def p_expr_rel(p):
                 | expr EQ expr
                 | expr GT expr
                 | expr LT expr"""
-    p[0] = (p[2], p[1], p[3])
+    p[0] = BinExpr(p[2], p[1], p[3])
 
 def p_rows(p):
     """rows : rows ',' row
@@ -134,25 +135,26 @@ def p_if(p):
     """if : IF '(' expr_rel ')' instr ELSE instr
           | IF '(' expr_rel ')' instr"""
     if len(p) == 8:
-        p[0] = ('IF', p[3], p[5], 'ELSE', p[7])
+        p[0] = If(p[3],p[5],p[7])
     elif len(p) == 6:
-        p[0] = ('IF', p[3], p[5])
+        p[0] = If(p[3],p[5])
 
 def p_if_inside_loop(p):
     """if_inside_loop : IF '(' expr_rel ')' inside_loop ELSE inside_loop
                       | IF '(' expr_rel ')' inside_loop"""
     if len(p) == 8:
-        p[0] = ('IF', p[3], p[5], 'ELSE', p[7])
+        p[0] = If(p[3],p[5],[7])
     elif len(p) == 6:
-        p[0] = ('IF', p[3], p[5])
+        p[0] = If(p[3],p[5])
+
 
 def p_for(p):
     """for : FOR ID '=' index ':' index inside_loop"""
-    p[0] = ('FOR', p[2], p[4], p[6], p[7])
+    p[0] = For(ID(p[2]), p[4], p[6], p[7])
 
 def p_while(p):
     """while : WHILE '(' expr_rel ')' inside_loop"""
-    p[0] = ('WHILE', p[3], p[5])
+    p[0] = While(p[3],p[5])
 
 def p_inside_loop(p):
     """inside_loop : break_continue ';'
@@ -161,7 +163,7 @@ def p_inside_loop(p):
 
 def p_block_loop(p):
     """block_loop : '{' inside_loop_rec '}'"""
-    p[0] = p[2]
+    p[0] = Block(p[2])
 
 def p_inside_loop_rec(p):
     """inside_loop_rec : inside_loop_rec inside_loop
@@ -177,7 +179,7 @@ def p_print(p):
 
 def p_block(p):
     """block : '{' instr_rec '}'"""
-    p[0] = p[2]
+    p[0] = Block(p[2])
 
 def p_assign(p):
     """assign : id '=' expr
@@ -185,7 +187,7 @@ def p_assign(p):
               | id SUBASSIGN expr
               | id MULASSIGN expr
               | id DIVASSIGN expr"""
-    p[0] = (p[2], p[1], p[3])
+    p[0] = Assign(p[2], p[1], p[3])
 
 def p_cells(p):
     """cells : cells ',' expr
@@ -202,7 +204,8 @@ def p_return(p):
 def p_id(p):
     """id : ID
           | cell"""
-    p[0] = p[1]
+    # tutaj poprawic aby sprawdzal czy to cell czy ID
+    p[0] = ID(p[1])
 
 def p_cell(p):
     """cell : ID '[' index ',' index ']'"""
@@ -211,7 +214,8 @@ def p_cell(p):
 def p_index(p):
     """index : ID
              | INTNUM"""
-    p[0] = p[1]   
+    # tutaj poprawic aby sprawdzal czy to intnum czy ID
+    p[0] = IntNum(p[1])
 
 def p_break_continue(p):
     """break_continue : BREAK

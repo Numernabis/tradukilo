@@ -3,6 +3,7 @@ import sys
 # import ply.lex as lex
 import scanner  # scanner.py is a file you create, (it is not an external library)
 import Mparser
+from TreePrinter import TreePrinter
 
 
 if __name__ == '__main__':
@@ -31,14 +32,20 @@ if __name__ == '__main__':
 
     parser = Mparser.parser
     p = parser.parse(text, lexer=lexer)
-    #print(p)
+    ast = p
+    for i in ast:
+        i.printTree()
     
-    i = 0
-    while (i < len(p)):
-        a = p[i]
-        print(a[0])
-        j = 1
-        while (j < len(a)):
-            print('  ', a[j])
-            j += 1
-        i += 1
+    # i = 0
+    # while (i < len(p)):
+    #     a = p[i]
+    #     print(a[0])
+    #     j = 1
+    #     while (j < len(a)):
+    #         print('  ', a[j])
+    #         j += 1
+    #     i += 1
+
+    # ast.printTree()
+
+
