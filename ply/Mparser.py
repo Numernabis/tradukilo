@@ -11,9 +11,8 @@ precedence = (
     ('nonassoc', 'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT'),
     ('left', '+', '-', 'DOTADD', 'DOTSUB'),
     ('left', '*', '/', 'DOTMUL', 'DOTDIV'),
-    ('right', 'UMINUS', '\''),    # Unary minus operator
+    ('right', 'UMINUS', '\''),    # Unary minus & transpose
 )
-
 
 def p_error(p):
     if p:
@@ -65,50 +64,63 @@ def p_instr_coloff_inside_loop(p):
                                 | if_inside_loop"""
     p[0] = p[1]
 
+# ------------------------------------------------------------------
+
 def p_expr_1(p):
+    """expr : INTNUM"""
+    p[0] = IntNum(p[1])
+
+def p_expr_2(p):
+    """expr : FLOATNUM"""
+    p[0] = FloatNum(p[1])
+
+def p_expr_3(p):
+    """expr : STRING"""
+    p[0] = String(p[1])
+
+def p_expr_4(p):
+    """expr : ID"""
+    p[0] = Id(p[1])
+
+def p_expr_5(p):
+    """expr : expr_rel"""
+    p[0] = p[1]
+
+def p_expr_6(p):
+    """expr : '(' expr ')'"""
+    p[0] = p[2]
+
+def p_expr_7(p):
+    """expr : '-' expr %prec UMINUS"""
+    p[0] = UMinus(p[2])
+
+def p_expr_8(p):
+    """expr : expr '\\''"""
+    p[0] = Transpose(p[1])
+
+def p_expr_9(p):
+    """expr : '[' rows ']'"""
+    p[0] = Matrix(p[2])
+
+def p_expr_bin(p):
     """expr : expr '+' expr
             | expr '-' expr
             | expr '/' expr
             | expr '*' expr"""
-    p[0] = BinExpr(p[2],p[1],p[3]) 
+    p[0] = BinExpr(p[2], p[1], p[3]) 
 
-def p_expr_2(p):
-    """expr : INTNUM
-            | FLOATNUM
-            | STRING
-            | ID
-            | expr_rel"""
-    # dodac sprawdzanie czym jest tak naprawde
-    p[0] = IntNum(p[1])
-
-def p_expr_3(p):
+def p_expr_matrix(p):
     """expr : ZEROS '(' INTNUM ')'
             | ONES '(' INTNUM ')'
             | EYE '(' INTNUM ')'"""
-    p[0] = MatrixSpecialMethod(p[1],IntNum(p[3]))
+    p[0] = MatrixSpecialMethod(p[1], IntNum(p[3]))
 
-def p_expr_4(p):
+def p_expr_dot(p):
     """expr : expr DOTADD expr
             | expr DOTSUB expr
             | expr DOTDIV expr
             | expr DOTMUL expr"""
     p[0] = BinExpr(p[2], p[1], p[3])
-
-def p_expr_5(p):
-    """expr : '(' expr ')'"""
-    p[0] = p[2]
-
-def p_expr_6(p):
-    """expr : '-' expr %prec UMINUS"""
-    p[0] = UMinus(p[2])
-
-def p_expr_7(p):
-    """expr : expr '\\''"""
-    p[0] = Transpose(p[1])
-
-def p_expr_8(p):
-    """expr : '[' rows ']'"""
-    p[0] = Matrix(p[2])
 
 def p_expr_rel(p):
     """expr_rel : expr GTE expr
@@ -118,6 +130,15 @@ def p_expr_rel(p):
                 | expr GT expr
                 | expr LT expr"""
     p[0] = BinExpr(p[2], p[1], p[3])
+
+def p_assign(p):
+    """assign : id '=' expr
+              | id ADDASSIGN expr
+              | id SUBASSIGN expr
+              | id MULASSIGN expr
+              | id DIVASSIGN expr"""
+    p[0] = Assign(p[2], p[1], p[3])
+
 
 def p_rows(p):
     """rows : rows ',' row
@@ -131,39 +152,44 @@ def p_row(p):
     """row : '[' cells ']'"""
     p[0] = p[2]
 
+def p_cells(p):
+    """cells : cells ',' expr
+             | expr"""
+    if len(p) == 4:
+        p[0] = p[1] + [p[3]]
+    elif len(p) == 2:
+        p[0] = [p[1]]
+
+# ------------------------------------------------------------------
+
 def p_if(p):
     """if : IF '(' expr_rel ')' instr ELSE instr
           | IF '(' expr_rel ')' instr"""
     if len(p) == 8:
-        p[0] = If(p[3],p[5],p[7])
+        p[0] = If(p[3], p[5], p[7])
     elif len(p) == 6:
-        p[0] = If(p[3],p[5])
+        p[0] = If(p[3], p[5])
 
 def p_if_inside_loop(p):
     """if_inside_loop : IF '(' expr_rel ')' inside_loop ELSE inside_loop
                       | IF '(' expr_rel ')' inside_loop"""
     if len(p) == 8:
-        p[0] = If(p[3],p[5],[7])
+        p[0] = If(p[3], p[5], p[7])
     elif len(p) == 6:
-        p[0] = If(p[3],p[5])
-
+        p[0] = If(p[3], p[5])
 
 def p_for(p):
     """for : FOR ID '=' index ':' index inside_loop"""
-    p[0] = For(ID(p[2]), p[4], p[6], p[7])
+    p[0] = For(Id(p[2]), p[4], p[6], p[7])
 
 def p_while(p):
     """while : WHILE '(' expr_rel ')' inside_loop"""
-    p[0] = While(p[3],p[5])
+    p[0] = While(p[3], p[5])
 
 def p_inside_loop(p):
     """inside_loop : break_continue ';'
                    | instr_inside_loop"""
     p[0] = p[1]
-
-def p_block_loop(p):
-    """block_loop : '{' inside_loop_rec '}'"""
-    p[0] = Block(p[2])
 
 def p_inside_loop_rec(p):
     """inside_loop_rec : inside_loop_rec inside_loop
@@ -173,53 +199,50 @@ def p_inside_loop_rec(p):
     elif len(p) == 2:
         p[0] = [p[1]]
 
-def p_print(p):
-    """print : PRINT cells"""
-    p[0] = ('PRINT', p[2])
+def p_block_loop(p):
+    """block_loop : '{' inside_loop_rec '}'"""
+    p[0] = Block(p[2])
 
 def p_block(p):
     """block : '{' instr_rec '}'"""
     p[0] = Block(p[2])
 
-def p_assign(p):
-    """assign : id '=' expr
-              | id ADDASSIGN expr
-              | id SUBASSIGN expr
-              | id MULASSIGN expr
-              | id DIVASSIGN expr"""
-    p[0] = Assign(p[2], p[1], p[3])
+# ------------------------------------------------------------------
 
-def p_cells(p):
-    """cells : cells ',' expr
-             | expr"""
-    if len(p) == 4:
-        p[0] = p[1] + [p[3]]
-    elif len(p) == 2:
-        p[0] = [p[1]]
+def p_print(p):
+    """print : PRINT cells"""
+    p[0] = Print(p[2])
 
 def p_return(p):
     """return : RETURN expr"""
-    p[0] = ('RETURN', p[2])
+    p[0] = Return(p[2])
 
 def p_id(p):
-    """id : ID
-          | cell"""
-    # tutaj poprawic aby sprawdzal czy to cell czy ID
-    p[0] = ID(p[1])
+    """id : id_2
+          | ref"""
+    p[0] = p[1]
 
-def p_cell(p):
-    """cell : ID '[' index ',' index ']'"""
-    p[0] = ('CELL', p[1], p[3], p[5])
+def p_id_2(p):
+    """id_2 : ID"""
+    p[0] = Id(p[1])
+
+def p_ref(p):
+    """ref : ID '[' index ',' index ']'"""
+    p[0] = Ref(Id(p[1]), p[3], p[5])
 
 def p_index(p):
     """index : ID
              | INTNUM"""
-    # tutaj poprawic aby sprawdzal czy to intnum czy ID
-    p[0] = IntNum(p[1])
+    if p[1] == "ID":
+        p[0] = Id(p[1])
+    else:
+        p[0] = IntNum(p[1])
 
 def p_break_continue(p):
     """break_continue : BREAK
                       | CONTINUE"""
     p[0] = p[1]
+
+# ------------------------------------------------------------------
 
 parser = yacc.yacc()

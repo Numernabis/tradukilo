@@ -1,15 +1,12 @@
 
-
 class Node(object):
     pass
-
 
 class IntNum(Node):
     def __init__(self, value):
         self.value = value
 
 class FloatNum(Node):
-
     def __init__(self, value):
         self.value = value
 
@@ -17,7 +14,7 @@ class String(Node):
     def __init__(self, value):
         self.value = value
 
-class ID(Node):
+class Id(Node):
     def __init__(self, name):
         self.name = name
 
@@ -34,8 +31,8 @@ class Block(Node):
         self.exprs = exprs    
     
 class MatrixSpecialMethod(Node):
-    def __init__(self,method,size):
-        self.method = method.upper()
+    def __init__(self, method, size):
+        self.method = method
         self.size = size
 
 class Matrix(Node):
@@ -71,6 +68,23 @@ class If(Node):
         self.condition = condition
         self.ifTrue = ifTrue
         self.ifFalse = ifFalse
+
+class Print(Node):
+    def __init__(self, cells):
+        self.cells = cells
+
+class Return(Node):
+    def __init__(self, expr):
+        self.expr = expr
+
+class Ref(Node):
+    def __init__(self, id, firstIndex, secondIndex):
+        self.id = id
+        self.firstIndex = firstIndex
+        self.secondIndex = secondIndex
+
+
+
 # ...
 # fill out missing classes
 # ...
