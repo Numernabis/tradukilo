@@ -239,9 +239,17 @@ def p_index(p):
         p[0] = IntNum(p[1])
 
 def p_break_continue(p):
-    """break_continue : BREAK
-                      | CONTINUE"""
+    """break_continue : break
+                      | continue"""
     p[0] = p[1]
+
+def p_break(p):
+    """break : BREAK"""
+    p[0] = Break(p[1])
+
+def p_continue(p):
+    """continue : CONTINUE"""
+    p[0] = Continue(p[1])
 
 # ------------------------------------------------------------------
 

@@ -83,7 +83,13 @@ class Ref(Node):
         self.firstIndex = firstIndex
         self.secondIndex = secondIndex
 
+class Break(Node):
+    def __init__(self, name):
+        self.name = name
 
+class Continue(Node):
+    def __init__(self, name):
+        self.name = name
 
 # ...
 # fill out missing classes

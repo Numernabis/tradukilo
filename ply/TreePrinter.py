@@ -130,10 +130,16 @@ class TreePrinter:
         self.id.printTree(indent + 1)
         self.firstIndex.printTree(indent + 1)
         self.secondIndex.printTree(indent + 1)
-    
 
-    # define printTree for other classes
-    # ...
+    @addToClass(AST.Break)
+    def printTree(self,indent=0):
+        space = "|  "
+        print(indent*space + self.name)
+
+    @addToClass(AST.Continue)
+    def printTree(self,indent=0):
+        space = "|  "
+        print(indent*space + self.name)
 
     @addToClass(AST.Error)
     def printTree(self, indent=0):
