@@ -7,11 +7,13 @@ from AST import *
 tokens = scanner.tokens
 
 precedence = (
+    ("left", 'IF'),   # Dangling-else solution
+    ("left", 'ELSE'), 
     ('nonassoc', '=', 'ADDASSIGN', 'SUBASSIGN', 'MULASSIGN', 'DIVASSIGN'),
     ('nonassoc', 'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT'),
     ('left', '+', '-', 'DOTADD', 'DOTSUB'),
     ('left', '*', '/', 'DOTMUL', 'DOTDIV'),
-    ('right', 'UMINUS', '\''),    # Unary minus & transpose
+    ('right', 'UMINUS', '\''),   # Unary minus & transpose
 )
 
 def p_error(p):
@@ -163,16 +165,16 @@ def p_cells(p):
 # ------------------------------------------------------------------
 
 def p_if(p):
-    """if : IF '(' expr_rel ')' instr ELSE instr
-          | IF '(' expr_rel ')' instr"""
+    """if : IF '(' expr_rel ')' instr %prec IF
+          | IF '(' expr_rel ')' instr ELSE instr"""
     if len(p) == 8:
         p[0] = If(p[3], p[5], p[7])
     elif len(p) == 6:
         p[0] = If(p[3], p[5])
 
 def p_if_inside_loop(p):
-    """if_inside_loop : IF '(' expr_rel ')' inside_loop ELSE inside_loop
-                      | IF '(' expr_rel ')' inside_loop"""
+    """if_inside_loop : IF '(' expr_rel ')' inside_loop %prec IF
+                      | IF '(' expr_rel ')' inside_loop ELSE inside_loop"""
     if len(p) == 8:
         p[0] = If(p[3], p[5], p[7])
     elif len(p) == 6:
@@ -253,4 +255,4 @@ def p_continue(p):
 
 # ------------------------------------------------------------------
 
-parser = yacc.yacc()
+parser = yacc.yacc(debug=True)
