@@ -4,6 +4,7 @@ import sys
 import scanner  # scanner.py is a file you create, (it is not an external library)
 import Mparser
 from TreePrinter import TreePrinter
+from TypeChecker import TypeChecker
 
 
 if __name__ == '__main__':
@@ -33,9 +34,13 @@ if __name__ == '__main__':
     parser = Mparser.parser
     p = parser.parse(text, lexer=lexer)
     ast = p
-    for i in ast:
-        i.printTree()
+    # for i in ast:
+    #     i.printTree()
     
+    # Below code shows how to use visitor
+    typeChecker = TypeChecker()   
+    typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
+
     # i = 0
     # while (i < len(p)):
     #     a = p[i]
