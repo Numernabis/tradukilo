@@ -8,15 +8,19 @@ class Symbol(object):
 class VariableSymbol(Symbol):
 
     def __init__(self, name, type):
-        # pass
         self.name = name
         self.type = type
-    #
 
 class IntNumSymbol(Symbol):
-
     def __init__(self, value):
-        # pass
+        self.value = value
+
+class FloatNumSymbol(Symbol):
+    def __init__(self, value):
+        self.value = value
+
+class StringSymbol(Symbol):
+    def __init__(self, value):
         self.value = value
 
 # luzna koncepcja SymbolTable. Ma ona chyba zawierac nazwe zmiennej lub funkcji
@@ -31,33 +35,26 @@ class SymbolTable(object):
             self.parent = parent
         self.name = name
         self.table = pd.DataFrame(data={'name': [], 'symbol': []})
-        # pass
-    #
 
     def put(self, name, symbol): # put variable symbol or fundef under <name> entry
+        # powinno usuwac wczesniejsza wartosc jesli istnieje
+        self.table = self.table[self.table.name == name]
         self.table = self.table.append({'name': name, 'symbol': symbol}, ignore_index=True)
-        print(self.table)
-        # pass
     #
 
     def get(self, name): # get variable symbol or fundef from <name> entry
-        return self.table.loc[name,'symbol']
-        # pass
-    
-    #
+        try:
+            found = self.table.loc[self.table['name'] == name].iloc[0]['symbol']
+            return found
+        except:
+            return None
 
     def getParentScope(self):
         return self.parent
-        # pass
-    #
 
     def pushScope(self, name):
         return SymbolTable(self,name)
-        # pass
-    #
 
     def popScope(self):
         return self.parent
-        # pass
-    #
 

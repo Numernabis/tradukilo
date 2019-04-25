@@ -117,6 +117,13 @@ def p_expr_matrix(p):
             | EYE '(' INTNUM ')'"""
     p[0] = MatrixSpecialMethod(p[1], IntNum(p[3]))
 
+# nie mozemy zrobic np zeros(A) zeros(-2) a wypadaloby dac taka mozliwosc
+def p_expr_matrix_with_expr(p):
+    """expr : ZEROS '(' expr ')'
+            | ONES '(' expr ')'
+            | EYE '(' expr ')'"""
+    p[0] = MatrixSpecialMethod(p[1], IntNum(p[3]))
+
 def p_expr_dot(p):
     """expr : expr DOTADD expr
             | expr DOTSUB expr
