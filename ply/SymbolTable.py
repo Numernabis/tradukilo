@@ -6,11 +6,22 @@ class Symbol(object):
     pass
 
 class VariableSymbol(Symbol):
-
     def __init__(self, name, type):
         self.name = name
         self.type = type
 
+class IdSymbol(Symbol):
+    def __init__(self, name, type):
+        # wczesniejszy Id w AST nie ma type
+        self.name = name
+        self.type = type
+
+# dodac typ :))))))
+class MatrixSymbol(Symbol):
+      def __init__(self, width, height):
+          self.width = width
+          self.height = height
+             
 class IntNumSymbol(Symbol):
     def __init__(self, value):
         self.value = value
@@ -34,18 +45,18 @@ class SymbolTable(object):
         else:
             self.parent = parent
         self.name = name
-        self.table = pd.DataFrame(data={'name': [], 'symbol': []})
+        # dodac pustosc 
+        self.table = pd.DataFrame(data={'name': [''], 'symbol': [Symbol()]})
 
     def put(self, name, symbol): # put variable symbol or fundef under <name> entry
         # powinno usuwac wczesniejsza wartosc jesli istnieje
-        self.table = self.table[self.table.name == name]
+        self.table = self.table[self.table.name != name]
         self.table = self.table.append({'name': name, 'symbol': symbol}, ignore_index=True)
     #
 
     def get(self, name): # get variable symbol or fundef from <name> entry
         try:
-            found = self.table.loc[self.table['name'] == name].iloc[0]['symbol']
-            return found
+            return self.table.loc[self.table['name'] == name].iloc[0]['symbol']
         except:
             return None
 

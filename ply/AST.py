@@ -48,7 +48,6 @@ class BinExpr(Node):
 class Assign(Node):
     def __init__(self, assignType, left, right):
         self.assignType = assignType
-        print(type(right))
         self.left = left
         self.right = right
 

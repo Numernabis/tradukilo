@@ -36,7 +36,6 @@ class TypeChecker(NodeVisitor):
     global symbol_table
     # podana jako argument 1 bo cos trzeba podac do konstruktora
     symbol_table = SymbolTable(1,"global")
-
     global generate_scope_name
     generate_scope_name = 1
     def visit_BinExpr(self, node):
@@ -47,6 +46,7 @@ class TypeChecker(NodeVisitor):
         op    = node.op
         # print(op)
         # wszystko jest poprawne??
+        # dodac sprawdzanie czy left ma taki sam typ, rozmiar co right
         # ... 
         #
     # i tutaj chyba bedzie trzeba pododawac sprawdzanie wszystkiego
@@ -60,6 +60,8 @@ class TypeChecker(NodeVisitor):
     def visit_Assign(self,node):
         assignType = node.assignType
         if(assignType != "="):
+            # id_value = take_Id_value(node.left)
+
             pass
         else:
             left = node.left.name
@@ -70,10 +72,12 @@ class TypeChecker(NodeVisitor):
                 symbol_table.put(left,FloatNumSymbol(right))
             elif isinstance(right, String):
                 symbol_table.put(left,StringSymbol(right))
+            # i tutaj jeszcze matrix, Id, A[2,5] i moze wiecej
 
     def visit_MatrixSpecialMethod(self,node):
         # type1 = self.visit(node.method)    
         type2 = self.visit(node.size)
+        # czy metody visit powinny cos zwracac?
         if(isinstance(node.size,IntNum)):
             # niezbyt dziala bo gramatyka nie daje wszystkich
             # mozliwosci, np nie mozna podac zeros(A)
@@ -98,27 +102,50 @@ class TypeChecker(NodeVisitor):
         value = take_Id_value(node)
         if value == None:
             print("scope doesnt have my Id")
-        pass
+        return value
 
     def visit_Matrix(self,node):
         rows = node.rows
-        size = -1
+        # uwzglednic pusta macierz :) 
+        size = len(rows[0])
         for row in rows:
-            if(size == -1):
-                size = len(row)
-            else:
-                if len(row) != size:
-                    print("wrong matrix sizeee!")
-                    break
+            # dodac petle na przechodze po komorkach
+            if len(row) != size:
+                print("wrong matrix sizeee!")
+                break
+        return MatrixSymbol(size,len(rows))
 
     # pewnie cos bardzo podobnego bedzie mial if, while, for
     def visit_Block(self,node):
-        global symbol_table
+        # global symbol_table
         global generate_scope_name
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         for expr in node.exprs:
             self.visit(expr)
+        symbol_table = symbol_table.popScope()
+
+
+    def visit_While(self,node):
+        global symbol_table
+        global generate_scope_name
+        self.visit(node.condition)
+        symbol_table = symbol_table.pushScope(generate_scope_name)
+        generate_scope_name += 1
+        self.visit(node.ifTrue)
+        symbol_table = symbol_table.popScope()
+
+    def visit_For(self,node):
+        global symbol_table
+        global generate_scope_name
+        # trzeba dodac do symbol table Id, tylko z jaka wartoscia?
+        self.visit(node.firstIndex)
+        self.visit(node.secondIndex)
+        symbol_table = symbol_table.pushScope(generate_scope_name)
+        generate_scope_name += 1
+        # id_type = take_Id_value(node.id)
+        symbol_table.put(node.id.name,IdSymbol(node.id.name, id_type))
+        self.visit(node.expr)
         symbol_table = symbol_table.getParentScope()
 
     # funkcja bedzie sprawdzala czy node jest
