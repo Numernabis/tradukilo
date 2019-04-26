@@ -28,8 +28,8 @@ class Transpose(Node):
 
 class Block(Node):
     def __init__(self, exprs):
-        self.exprs = exprs    
-    
+        self.exprs = exprs
+
 class MatrixSpecialMethod(Node):
     def __init__(self, method, size):
         self.method = method
@@ -91,11 +91,6 @@ class Continue(Node):
     def __init__(self, name):
         self.name = name
 
-# ...
-# fill out missing classes
-# ...
-
 class Error(Node):
     def __init__(self):
         pass
-      

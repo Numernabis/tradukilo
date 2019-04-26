@@ -7,13 +7,14 @@ from AST import *
 tokens = scanner.tokens
 
 precedence = (
-    ("left", 'IF'),   # Dangling-else solution
-    ("left", 'ELSE'), 
+    ('left', 'IF'),   # Dangling-else solution
+    ('left', 'ELSE'),
     ('nonassoc', '=', 'ADDASSIGN', 'SUBASSIGN', 'MULASSIGN', 'DIVASSIGN'),
     ('nonassoc', 'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT'),
     ('left', '+', '-', 'DOTADD', 'DOTSUB'),
     ('left', '*', '/', 'DOTMUL', 'DOTDIV'),
-    ('right', 'UMINUS', '\''),   # Unary minus & transpose
+    ('right', 'UMINUS'),   # Unary minus
+    ('right', '\''),    # Transpose
 )
 
 def p_error(p):
@@ -81,8 +82,8 @@ def p_expr_3(p):
     p[0] = String(p[1])
 
 def p_expr_4(p):
-    """expr : ID"""
-    p[0] = Id(p[1])
+    """expr : id"""
+    p[0] = p[1]
 
 def p_expr_5(p):
     """expr : expr_rel"""
@@ -109,19 +110,12 @@ def p_expr_bin(p):
             | expr '-' expr
             | expr '/' expr
             | expr '*' expr"""
-    p[0] = BinExpr(p[2], p[1], p[3]) 
+    p[0] = BinExpr(p[2], p[1], p[3])
 
 def p_expr_matrix(p):
     """expr : ZEROS '(' INTNUM ')'
             | ONES '(' INTNUM ')'
             | EYE '(' INTNUM ')'"""
-    p[0] = MatrixSpecialMethod(p[1], IntNum(p[3]))
-
-# nie mozemy zrobic np zeros(A) zeros(-2) a wypadaloby dac taka mozliwosc
-def p_expr_matrix_with_expr(p):
-    """expr : ZEROS '(' expr ')'
-            | ONES '(' expr ')'
-            | EYE '(' expr ')'"""
     p[0] = MatrixSpecialMethod(p[1], IntNum(p[3]))
 
 def p_expr_dot(p):
@@ -227,12 +221,12 @@ def p_return(p):
     p[0] = Return(p[2])
 
 def p_id(p):
-    """id : id_2
+    """id : nonref
           | ref"""
     p[0] = p[1]
 
-def p_id_2(p):
-    """id_2 : ID"""
+def p_nonref(p):
+    """nonref : ID"""
     p[0] = Id(p[1])
 
 def p_ref(p):

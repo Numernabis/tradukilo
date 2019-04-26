@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import pandas as pd
 
-# to ponizej sam dodalem
 class Symbol(object):
     pass
 
@@ -16,12 +15,12 @@ class IdSymbol(Symbol):
         self.name = name
         self.type = type
 
-# dodac typ :))))))
 class MatrixSymbol(Symbol):
-      def __init__(self, width, height):
-          self.width = width
-          self.height = height
-             
+    def __init__(self, width, height, type):
+        self.width = width
+        self.height = height
+        self.type = type
+
 class IntNumSymbol(Symbol):
     def __init__(self, value):
         self.value = value
@@ -40,21 +39,27 @@ class StringSymbol(Symbol):
 class SymbolTable(object):
 
     def __init__(self, parent, name): # parent scope and symbol table name
-        if(name == "global"):
+        if name == 'global':
             self.parent = self
         else:
             self.parent = parent
         self.name = name
-        # dodac pustosc 
-        self.table = pd.DataFrame(data={'name': [''], 'symbol': [Symbol()]})
+        self.table = pd.DataFrame(
+            data = { 'name': [''], 'symbol': [Symbol()] }
+        )
 
-    def put(self, name, symbol): # put variable symbol or fundef under <name> entry
+    def put(self, name, symbol):
+        # put variable symbol or fundef under <name> entry
         # powinno usuwac wczesniejsza wartosc jesli istnieje
-        self.table = self.table[self.table.name != name]
-        self.table = self.table.append({'name': name, 'symbol': symbol}, ignore_index=True)
-    #
+        table = self.table
+        table = table[table.name != name]
+        table = table.append(
+            { 'name': name, 'symbol': symbol },
+            ignore_index = True
+        )
 
-    def get(self, name): # get variable symbol or fundef from <name> entry
+    def get(self, name):
+        # get variable symbol or fundef from <name> entry
         try:
             return self.table.loc[self.table['name'] == name].iloc[0]['symbol']
         except:
@@ -68,4 +73,3 @@ class SymbolTable(object):
 
     def popScope(self):
         return self.parent
-
