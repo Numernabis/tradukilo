@@ -233,13 +233,13 @@ def p_ref(p):
     """ref : ID '[' index ',' index ']'"""
     p[0] = Ref(Id(p[1]), p[3], p[5])
 
-def p_index(p):
-    """index : ID
-             | INTNUM"""
-    if p[1] == "ID":
-        p[0] = Id(p[1])
-    else:
-        p[0] = IntNum(p[1])
+def p_index_ID(p):
+    """index : ID"""
+    p[0] = Id(p[1])
+
+def p_index_IntNum(p):
+    """index : INTNUM"""
+    p[0] = IntNum(p[1])
 
 def p_break_continue(p):
     """break_continue : break

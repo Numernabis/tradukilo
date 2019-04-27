@@ -21,17 +21,32 @@ class MatrixSymbol(Symbol):
         self.height = height
         self.type = type
 
+class MatrixSpecialMethodSymbol(Symbol):
+    def __init__(self, method, size):
+        self.method = method
+        self.size = size
+
+class PrintSymbol(Symbol):
+    pass
+    
+# chyba nie potrzebne
+class AssignSymbol(Symbol):
+    pass
+
+# chyba lepiej bedzie zwracac  IntNumSymbol lub cos takiego
+class BinExprSymbol(Symbol):
+    def __init__(self, resultType):
+        self.resultType = resultType
+
 class IntNumSymbol(Symbol):
-    def __init__(self, value):
-        self.value = value
+    pass
 
 class FloatNumSymbol(Symbol):
-    def __init__(self, value):
-        self.value = value
+    pass
 
 class StringSymbol(Symbol):
-    def __init__(self, value):
-        self.value = value
+    pass
+
 
 # luzna koncepcja SymbolTable. Ma ona chyba zawierac nazwe zmiennej lub funkcji
 # oraz jej instancje jako Symbol. Ponizej link do rysunku, ktory ma troche sensu
@@ -51,9 +66,9 @@ class SymbolTable(object):
     def put(self, name, symbol):
         # put variable symbol or fundef under <name> entry
         # powinno usuwac wczesniejsza wartosc jesli istnieje
-        table = self.table
-        table = table[table.name != name]
-        table = table.append(
+        # table = self.table
+        self.table = self.table[self.table.name != name]
+        self.table = self.table.append(
             { 'name': name, 'symbol': symbol },
             ignore_index = True
         )
