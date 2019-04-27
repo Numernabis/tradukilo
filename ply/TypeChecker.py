@@ -32,60 +32,57 @@ class TypeChecker(NodeVisitor):
     global generate_scope_name
     generate_scope_name = 1
 
-    # problem z operacjami takimi jak <
-    # bo nie mamy typu Boolean
     def visit_BinExpr(self, node):
-        left_symbol = self.visit(node.left)     # type1 = node.left.accept(self)
-        right_symbol = self.visit(node.right)    # type2 = node.right.accept(self)
-        op    = node.op
+        left_symbol = self.visit(node.left)
+        right_symbol = self.visit(node.right)
+        if(left_symbol == None or right_symbol == None):
+            print("bad argument(s) for operation")
+            return None
+        op = node.op
         type_left = type(left_symbol)
         type_right = type(right_symbol)
-        if(type_left != type_right):
-            # operacja ze skalarem
-            if(type_right != MatrixSymbol):
-                print("bad types for binExpr")
-                return None
-            # sprawdzic poprawnosc wynikow dzialan, rozmiar tablic itp
-        if(type_left == MatrixSymbol):
-            if( op != "*" and 
-                left_symbol.width == right_symbol.width and
-                left_symbol.height == right_symbol.height):
-                return left_symbol
-            elif( op == "*" and
-                left_symbol.width == right_symbol.height):
-                return MatrixSymbol(left_symbol.height,right_symbol.width)
+        if(type_left == type_right):
+            if(type_left != MatrixSymbol):
+                return type_left
+            else:
+                if( (op == "+" or op == "-") and 
+                    left_symbol.type == right_symbol.type and
+                    left_symbol.width == right_symbol.width and
+                    left_symbol.height == right_symbol.height):
+                    return left_symbol
+                elif( op == "*" and
+                    left_symbol.type == right_symbol.type and
+                    left_symbol.width == right_symbol.height):
+                    return MatrixSymbol(left_symbol.height,right_symbol.width,right_symbol.type)
+                else:
+                    print("bad operation ?")
+                    return None
+
+        elif(type_right == MatrixSymbol):
+            if( op == "*" and type_left == right_symbol.type):
+                return right_symbol
+            else:
+                print("bad types for operation")
+            return None
         else:
-            math_op = {"+","-","*","/"}
-            if(op in math_op):  
-                return left_symbol
-        
+            print("bad types for operation")
+            return None
 
-        
-        # print(op)
-        # wszystko jest poprawne??
-        # dodac sprawdzanie czy left ma taki sam typ, rozmiar co right
-
-    # i tutaj chyba bedzie trzeba pododawac sprawdzanie wszystkiego
-    # czyli np czy uzywamy zmiennej ktora jest w scopie
-    # czy macierz ma dobre wymiary itd.
-    # to na dole oczywiscie nie jest do konca poprawne
-
-    # pewnie trzeba dodac wszedzie sprawdzania czy wartosc dla
-    # ID istnieje w SymbolTable
     def visit_Assign(self,node):
         id_value = None
+        left = node.left.name
+        right = self.visit(node.right)
         if(node.assignType != "="):
             id_value = take_id_value(node.left)
             if id_value == None:
                 print("assignment to non-ID node")
                 return None
             else:
-                pass
-        # node.assignType = {'=', '+=', '-=', '*=', '/='}
-        left = node.left.name
-        right = self.visit(node.right)
-        # print(type(right))
-
+                if(type(id_value) == type(right)):
+                    return AssignSymbol()
+                else:
+                    print("bad assign to already existing Id")
+                    return None
         if( isinstance(right, IntNumSymbol) or
             isinstance(right, FloatNumSymbol) or
             isinstance(right, StringSymbol) or
@@ -97,15 +94,16 @@ class TypeChecker(NodeVisitor):
             return None
         return AssignSymbol()
 
+    # pewnie da sie uproscic
     def visit_MatrixSpecialMethod(self,node):
         # method = node.method
-        size = self.visit(node.size)
-        if isinstance(size, IntNumSymbol):
+        size = node.size
+        if isinstance(size, IntNum):
             if node.size.value <= 0:
                 print("argument for matrix special method must be positive integer")
                 return None
             else:
-                return MatrixSpecialMethodSymbol(node.method,size)
+                return MatrixSymbol(size.value,size.value,IntNumSymbol)
         else:
             print("bad argument for matrix special method")
             return None
@@ -120,8 +118,6 @@ class TypeChecker(NodeVisitor):
     def visit_String(self,node):
         return StringSymbol()
 
-    # chyba fajnie bedzie jak bedzie zwracał nie IdSymbol, a wartosc
-    # pod nim czyli np IntNumSymbol
     def visit_Id(self,node):
         value = take_id_value(node)
         if value == None:
@@ -167,25 +163,41 @@ class TypeChecker(NodeVisitor):
     def visit_For(self,node):
         global symbol_table
         global generate_scope_name
-        # trzeba dodac do symbol table Id, tylko z jaka wartoscia?
-        self.visit(node.firstIndex)
-        self.visit(node.secondIndex)
+        firstIndex = self.visit(node.firstIndex)
+        secondIndex = self.visit(node.secondIndex)
+        if(firstIndex == None or secondIndex == None):
+            print("bad range for if")
+            return None
+
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
-        # id_type = take_id_value(node.id)
-        symbol_table.put(node.id.name,IdSymbol(node.id.name, id_type))
+        symbol_table.put(node.id.name,IdSymbol(node.id.name, IntNumSymbol()))
         self.visit(node.expr)
         symbol_table = symbol_table.getParentScope()
 
     def visit_If(self,node):
-        # TODO
-        print("if")
+        global symbol_table
+        global generate_scope_name
         condition = self.visit(node.condition)
+        symbol_table = symbol_table.pushScope(generate_scope_name)
+        generate_scope_name += 1
         ifTrue = self.visit(node.ifTrue)
-        # ifFalse = self.visit(node.ifFalse)
+        symbol_table = symbol_table.popScope()
+        symbol_table = symbol_table.pushScope(generate_scope_name)
+        generate_scope_name += 1
+        ifFalse = self.visit(node.ifFalse)
+        symbol_table = symbol_table.popScope()
         if(condition == None):
             print("bad condition for if")
-        pass
+            return None
+        if(ifTrue == None):
+            print("bad true expr")
+            return None
+        if(ifFalse == None and node.ifFalse != ""):
+            print("bad false expr")
+            return None
+        return IfSymbol()
+        
 
     def visit_Print(self,node):
         for cell in node.cells:
@@ -200,7 +212,7 @@ class TypeChecker(NodeVisitor):
         if(return_value == None):
             print("bad return value")
             return None
-        return return_value
+        
         
     def visit_Ref(self,node):
         id_value = self.visit(node.id)

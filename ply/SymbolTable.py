@@ -33,6 +33,8 @@ class PrintSymbol(Symbol):
 class AssignSymbol(Symbol):
     pass
 
+class IfSymbol(Symbol):
+    pass
 # chyba lepiej bedzie zwracac  IntNumSymbol lub cos takiego
 class BinExprSymbol(Symbol):
     def __init__(self, resultType):
@@ -46,6 +48,7 @@ class FloatNumSymbol(Symbol):
 
 class StringSymbol(Symbol):
     pass
+
 
 
 # luzna koncepcja SymbolTable. Ma ona chyba zawierac nazwe zmiennej lub funkcji
