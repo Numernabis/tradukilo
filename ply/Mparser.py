@@ -71,15 +71,15 @@ def p_instr_coloff_inside_loop(p):
 
 def p_expr_1(p):
     """expr : INTNUM"""
-    p[0] = IntNum(p[1])
+    p[0] = IntNum(p[1], p.lineno(1))
 
 def p_expr_2(p):
     """expr : FLOATNUM"""
-    p[0] = FloatNum(p[1])
+    p[0] = FloatNum(p[1], p.lineno(1))
 
 def p_expr_3(p):
     """expr : STRING"""
-    p[0] = String(p[1])
+    p[0] = String(p[1], p.lineno(1))
 
 def p_expr_4(p):
     """expr : id"""
@@ -95,35 +95,35 @@ def p_expr_6(p):
 
 def p_expr_7(p):
     """expr : '-' expr %prec UMINUS"""
-    p[0] = UMinus(p[2])
+    p[0] = UMinus(p[2], p.lineno(2))
 
 def p_expr_8(p):
     """expr : expr '\\''"""
-    p[0] = Transpose(p[1])
+    p[0] = Transpose(p[1], p.lineno(1))
 
 def p_expr_9(p):
     """expr : '[' rows ']'"""
-    p[0] = Matrix(p[2])
+    p[0] = Matrix(p[2], p.lineno(1))
 
 def p_expr_bin(p):
     """expr : expr '+' expr
             | expr '-' expr
             | expr '/' expr
             | expr '*' expr"""
-    p[0] = BinExpr(p[2], p[1], p[3])
+    p[0] = BinExpr(p[2], p[1], p[3], p.lineno(2))
 
 def p_expr_matrix(p):
     """expr : ZEROS '(' INTNUM ')'
             | ONES '(' INTNUM ')'
             | EYE '(' INTNUM ')'"""
-    p[0] = MatrixSpecialMethod(p[1], IntNum(p[3]))
+    p[0] = MatrixSpecialMethod(p[1], IntNum(p[3], p.lineno(3)), p.lineno(1))
 
 def p_expr_dot(p):
     """expr : expr DOTADD expr
             | expr DOTSUB expr
             | expr DOTDIV expr
             | expr DOTMUL expr"""
-    p[0] = BinExpr(p[2], p[1], p[3])
+    p[0] = BinExpr(p[2], p[1], p[3], p.lineno(2))
 
 def p_expr_rel(p):
     """expr_rel : expr GTE expr
@@ -132,7 +132,7 @@ def p_expr_rel(p):
                 | expr EQ expr
                 | expr GT expr
                 | expr LT expr"""
-    p[0] = BinExpr(p[2], p[1], p[3])
+    p[0] = BinExpr(p[2], p[1], p[3], p.lineno(2))
 
 def p_assign(p):
     """assign : id '=' expr
@@ -140,7 +140,7 @@ def p_assign(p):
               | id SUBASSIGN expr
               | id MULASSIGN expr
               | id DIVASSIGN expr"""
-    p[0] = Assign(p[2], p[1], p[3])
+    p[0] = Assign(p[2], p[1], p[3], p.lineno(2))
 
 
 def p_rows(p):
@@ -169,25 +169,25 @@ def p_if(p):
     """if : IF '(' expr_rel ')' instr %prec IF
           | IF '(' expr_rel ')' instr ELSE instr"""
     if len(p) == 8:
-        p[0] = If(p[3], p[5], p[7])
+        p[0] = If(p[3], p[5], p[7], p.lineno(1))
     elif len(p) == 6:
-        p[0] = If(p[3], p[5])
+        p[0] = If(p[3], p[5], "", p.lineno(1))
 
 def p_if_inside_loop(p):
     """if_inside_loop : IF '(' expr_rel ')' inside_loop %prec IF
                       | IF '(' expr_rel ')' inside_loop ELSE inside_loop"""
     if len(p) == 8:
-        p[0] = If(p[3], p[5], p[7])
+        p[0] = If(p[3], p[5], p[7], p.lineno(1))
     elif len(p) == 6:
-        p[0] = If(p[3], p[5])
+        p[0] = If(p[3], p[5], "", p.lineno(1))
 
 def p_for(p):
     """for : FOR ID '=' index ':' index inside_loop"""
-    p[0] = For(Id(p[2]), p[4], p[6], p[7])
+    p[0] = For(Id(p[2], p.lineno(1)), p[4], p[6], p[7], p.lineno(1))
 
 def p_while(p):
     """while : WHILE '(' expr_rel ')' inside_loop"""
-    p[0] = While(p[3], p[5])
+    p[0] = While(p[3], p[5], p.lineno(1))
 
 def p_inside_loop(p):
     """inside_loop : break_continue ';'
@@ -204,21 +204,21 @@ def p_inside_loop_rec(p):
 
 def p_block_loop(p):
     """block_loop : '{' inside_loop_rec '}'"""
-    p[0] = Block(p[2])
+    p[0] = Block(p[2], p.lineno(1))
 
 def p_block(p):
     """block : '{' instr_rec '}'"""
-    p[0] = Block(p[2])
+    p[0] = Block(p[2], p.lineno(1))
 
 # ------------------------------------------------------------------
 
 def p_print(p):
     """print : PRINT cells"""
-    p[0] = Print(p[2])
+    p[0] = Print(p[2], p.lineno(1))
 
 def p_return(p):
     """return : RETURN expr"""
-    p[0] = Return(p[2])
+    p[0] = Return(p[2], p.lineno(1))
 
 def p_id(p):
     """id : nonref
@@ -227,19 +227,19 @@ def p_id(p):
 
 def p_nonref(p):
     """nonref : ID"""
-    p[0] = Id(p[1])
+    p[0] = Id(p[1], p.lineno(1))
 
 def p_ref(p):
     """ref : ID '[' index ',' index ']'"""
-    p[0] = Ref(Id(p[1]), p[3], p[5])
+    p[0] = Ref(Id(p[1], p.lineno(1)), p[3], p[5], p.lineno(1))
 
 def p_index_ID(p):
     """index : ID"""
-    p[0] = Id(p[1])
+    p[0] = Id(p[1], p.lineno(1))
 
 def p_index_IntNum(p):
     """index : INTNUM"""
-    p[0] = IntNum(p[1])
+    p[0] = IntNum(p[1], p.lineno(1))
 
 def p_break_continue(p):
     """break_continue : break
@@ -248,11 +248,11 @@ def p_break_continue(p):
 
 def p_break(p):
     """break : BREAK"""
-    p[0] = Break(p[1])
+    p[0] = Break(p[1], p.lineno(1))
 
 def p_continue(p):
     """continue : CONTINUE"""
-    p[0] = Continue(p[1])
+    p[0] = Continue(p[1], p.lineno(1))
 
 # ------------------------------------------------------------------
 

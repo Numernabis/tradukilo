@@ -11,7 +11,6 @@ class VariableSymbol(Symbol):
 
 class IdSymbol(Symbol):
     def __init__(self, name, type):
-        # wczesniejszy Id w AST nie ma type
         self.name = name
         self.type = type
 
@@ -28,13 +27,16 @@ class MatrixSpecialMethodSymbol(Symbol):
 
 class PrintSymbol(Symbol):
     pass
-    
-# chyba nie potrzebne
+
 class AssignSymbol(Symbol):
     pass
 
 class IfSymbol(Symbol):
     pass
+
+class RefSymbol(Symbol):
+    pass
+
 # chyba lepiej bedzie zwracac  IntNumSymbol lub cos takiego
 class BinExprSymbol(Symbol):
     def __init__(self, resultType):
@@ -50,13 +52,13 @@ class StringSymbol(Symbol):
     pass
 
 
-
 # luzna koncepcja SymbolTable. Ma ona chyba zawierac nazwe zmiennej lub funkcji
 # oraz jej instancje jako Symbol. Ponizej link do rysunku, ktory ma troche sensu
 # https://www.javatpoint.com/data-structure-for-symbol-table
 class SymbolTable(object):
 
-    def __init__(self, parent, name): # parent scope and symbol table name
+    def __init__(self, parent, name):
+        # parent scope and symbol table name
         if name == 'global':
             self.parent = self
         else:
@@ -69,7 +71,6 @@ class SymbolTable(object):
     def put(self, name, symbol):
         # put variable symbol or fundef under <name> entry
         # powinno usuwac wczesniejsza wartosc jesli istnieje
-        # table = self.table
         self.table = self.table[self.table.name != name]
         self.table = self.table.append(
             { 'name': name, 'symbol': symbol },

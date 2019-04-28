@@ -28,86 +28,81 @@ class NodeVisitor(object):
 class TypeChecker(NodeVisitor):
     global symbol_table
     # podana jako argument 1 bo cos trzeba podac do konstruktora
-    symbol_table = SymbolTable(1,"global")
+    symbol_table = SymbolTable(1, "global")
     global generate_scope_name
     generate_scope_name = 1
 
     def visit_BinExpr(self, node):
-        left_symbol = self.visit(node.left)
-        right_symbol = self.visit(node.right)
-        if(left_symbol == None or right_symbol == None):
-            print("bad argument(s) for operation")
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        if (left == None or right == None):
+            print_error("Bad argument(s) for BinExpr", node)
             return None
         op = node.op
-        type_left = type(left_symbol)
-        type_right = type(right_symbol)
-        if(type_left == type_right):
-            if(type_left != MatrixSymbol):
+        type_left = type(left)
+        type_right = type(right)
+        if (type_left == type_right):
+            if (type_left != MatrixSymbol):
                 return type_left
             else:
-                if( (op == "+" or op == "-") and 
-                    left_symbol.type == right_symbol.type and
-                    left_symbol.width == right_symbol.width and
-                    left_symbol.height == right_symbol.height):
-                    return left_symbol
-                elif( op == "*" and
-                    left_symbol.type == right_symbol.type and
-                    left_symbol.width == right_symbol.height):
-                    return MatrixSymbol(left_symbol.height,right_symbol.width,right_symbol.type)
+                if ((op == "+" or op == "-") and
+                    left.type == right.type and
+                    left.width == right.width and
+                    left.height == right.height):
+                    return left
+                elif (op == "*" and
+                    left.type == right.type and
+                    left.width == right.height):
+                    # save Matrix with proper dimensions
+                    return MatrixSymbol(left.height,right.width,right.type)
                 else:
-                    print("bad operation ?")
+                    print_error("Uncompatible dimensions for BinExpr", node)
                     return None
 
-        elif(type_right == MatrixSymbol):
-            if( op == "*" and type_left == right_symbol.type):
-                return right_symbol
+        elif (type_right == MatrixSymbol):
+            if (op == "*" and type_left == right.type):
+                return right
             else:
-                print("bad types for operation")
+                print_error("Uncompatible types for BinExpr", node)
             return None
         else:
-            print("bad types for operation")
+            print_error("Bad types for BinExpr", node)
             return None
 
     def visit_Assign(self,node):
         id_value = None
-        left = node.left.name
+        left = node.left
         right = self.visit(node.right)
-        if(node.assignType != "="):
-            id_value = take_id_value(node.left)
+        if (node.assignType != "="):
+            id_value = take_id_value(left)
             if id_value == None:
-                print("assignment to non-ID node")
+                print_error("Assigning to not existing ID", node)
                 return None
             else:
-                if(type(id_value) == type(right)):
+                if (type(id_value) == type(right)):
                     return AssignSymbol()
                 else:
-                    print("bad assign to already existing Id")
+                    print_error("Assigning bad type to existing ID", node)
                     return None
-        if( isinstance(right, IntNumSymbol) or
+        if (isinstance(right, IdSymbol) or
             isinstance(right, FloatNumSymbol) or
             isinstance(right, StringSymbol) or
-            isinstance(right, IdSymbol) or
+            isinstance(right, IntNumSymbol) or
+            isinstance(right, RefSymbol) or
             isinstance(right, MatrixSymbol)):
             symbol_table.put(left, right)
         else:
-            print("bad assignment value")
+            #print_error("Assignment bad value", node)
             return None
         return AssignSymbol()
 
-    # pewnie da sie uproscic
     def visit_MatrixSpecialMethod(self,node):
-        # method = node.method
         size = node.size
         if isinstance(size, IntNum):
-            if node.size.value <= 0:
-                print("argument for matrix special method must be positive integer")
-                return None
-            else:
-                return MatrixSymbol(size.value,size.value,IntNumSymbol)
+            return MatrixSymbol(size.value, size.value, IntNumSymbol)
         else:
-            print("bad argument for matrix special method")
+            print_error("Bad argument for matrix special method", node)
             return None
-
 
     def visit_IntNum(self,node):
         return IntNumSymbol()
@@ -121,24 +116,24 @@ class TypeChecker(NodeVisitor):
     def visit_Id(self,node):
         value = take_id_value(node)
         if value == None:
-            print("no such ID in scope: " + node.name)
+            print_error(node.name + " is not in scope", node)
         return value
 
     def visit_Matrix(self,node):
         rows = node.rows
         size = len(rows[0])
         if size == 0:
-            print("empty matrix")
+            print_error("Empty matrix", node)
             return None
         matrix_type = type(self.visit(rows[0][0]))
         for row in rows:
             for cell in row:
                 cell = self.visit(cell)
-                if(cell == None or type(cell) != matrix_type):
-                    print("bad matrix cell")
+                if (cell == None or type(cell) != matrix_type):
+                    print_error("Bad matrix cell type", node)
                     return None
             if len(row) != size:
-                print("uncompatible row size, expected: " + str(size))
+                print_error("Uncompatible row size, expected: " + str(size), node)
                 return None
         return MatrixSymbol(size, len(rows), matrix_type)
 
@@ -165,13 +160,13 @@ class TypeChecker(NodeVisitor):
         global generate_scope_name
         firstIndex = self.visit(node.firstIndex)
         secondIndex = self.visit(node.secondIndex)
-        if(firstIndex == None or secondIndex == None):
-            print("bad range for if")
+        if (firstIndex == None or secondIndex == None):
+            print_error("Bad range in for loop", node)
             return None
 
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
-        symbol_table.put(node.id.name,IdSymbol(node.id.name, IntNumSymbol()))
+        symbol_table.put(node.id.name, IdSymbol(node.id.name, IntNumSymbol()))
         self.visit(node.expr)
         symbol_table = symbol_table.getParentScope()
 
@@ -187,77 +182,86 @@ class TypeChecker(NodeVisitor):
         generate_scope_name += 1
         ifFalse = self.visit(node.ifFalse)
         symbol_table = symbol_table.popScope()
-        if(condition == None):
-            print("bad condition for if")
+        if (condition == None):
+            print_error("Bad condition for if", node)
             return None
-        if(ifTrue == None):
-            print("bad true expr")
+        if (ifTrue == None):
+            print_error("Bad expr in if", node)
             return None
-        if(ifFalse == None and node.ifFalse != ""):
-            print("bad false expr")
+        if (ifFalse == None and node.ifFalse != ""):
+            print_error("Bad expr in else", node)
             return None
         return IfSymbol()
-        
+
 
     def visit_Print(self,node):
         for cell in node.cells:
             cell_value = self.visit(cell)
-            if(cell_value == None):
-                print("bad print cells")
+            if (cell_value == None):
+                print_error("Bad print cells", node)
                 return None
         return PrintSymbol()
 
     def visit_Return(self,node):
         return_value = self.visit(node.expr)
-        if(return_value == None):
-            print("bad return value")
+        if (return_value == None):
+            print_error("Bad return value", node)
             return None
-        
-        
+
+
     def visit_Ref(self,node):
         id_value = self.visit(node.id)
-        if(id_value == None or type(id_value) != MatrixSymbol):
-            print("ref doesnt exist")
+        if (id_value == None or type(id_value) != MatrixSymbol):
+            print_error("Reference to not existing variable", node)
             return None
         firstIndex = node.firstIndex
         secondIndex = node.secondIndex
 
-        if(isinstance(firstIndex,IntNum)):
+        if (isinstance(firstIndex, IntNum)):
             firstIndex = firstIndex.value
         elif type(self.visit(firstIndex)) == IntNumSymbol:
             firstIndex = 0
         else:
-            print("firstIndex doesnt exist")
+            print_error("Bad reference firstIndex", node)
             return None
 
-        if(isinstance(secondIndex,IntNum)):
+        if (isinstance(secondIndex, IntNum)):
             secondIndex = secondIndex.value
         elif type(self.visit(secondIndex)) == IntNumSymbol:
             secondIndex = 0
         else:
-            print("secondIndex doesnt exist")
+            print_error("Bad reference secondIndex", node)
             return None
-        if( 0 <= firstIndex < id_value.width and 
-            0 <= secondIndex < id_value.height):
-            return id_value.type
-        print("bad reference to matrix")
-        return None
+
+        if (firstIndex > id_value.width or
+            secondIndex > id_value.height):
+            print_error("Bad reference to matrix", node)
+            return None
+        elif (firstIndex < 0 or secondIndex < 0):
+            print_error("Negative reference index", node)
+            return None
+        else:
+            return RefSymbol()
+
 # ------------------------------------------------------------------
 
-    # TODO: nazwy do poprawy, refaktor
     global take_id_value
     def take_id_value(node):
         if isinstance(node, Id):
-            current_symbol_table = symbol_table
-            tried = False
-            while(tried == False or current_symbol_table.name != "global"):
-                what_founded = current_symbol_table.get(node.name)
-                if what_founded != None:
-                    return what_founded
-                if current_symbol_table.name == "global":
-                    tried = True
-                current_symbol_table = current_symbol_table.getParentScope()
+            current_scope = symbol_table
+            flag = False
+            while (flag == False):
+                id_in_scope = current_scope.get(node.name)
+                if id_in_scope != None:
+                    return id_in_scope
+                if current_scope.name == "global":
+                    flag = True
+                current_scope = current_scope.getParentScope()
             return None
         else:
             return node
+
+    global print_error
+    def print_error(msg, node):
+        print(msg + " (line " + str(node.line) + ")")
 # ------------------------------------------------------------------

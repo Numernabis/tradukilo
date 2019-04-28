@@ -29,7 +29,7 @@ t_EQ = r'\=\='
 t_GT = r'\>'
 t_LT = r'\<'
 
-# słowa kluczowe
+# slowa kluczowe
 keywords = {
     'if' : 'IF',
     'else': 'ELSE',
@@ -49,7 +49,7 @@ tokens = [
     'DOTADD', 'DOTSUB', 'DOTMUL', 'DOTDIV',
     'ADDASSIGN', 'SUBASSIGN', 'MULASSIGN', 'DIVASSIGN',
     'GTE', 'LTE', 'NEQ', 'EQ', 'GT', 'LT',
-    'ID', 
+    'ID',
     'INTNUM', 'FLOATNUM',
     'STRING'
 ] + list(keywords.values());
@@ -68,7 +68,7 @@ def t_FLOATNUM(t):
     t.value = float(t.value)
     return t
 
-# liczby całkowite
+# liczby calkowite
 def t_INTNUM(t):
     r'\d+'
     t.value = int(t.value)
