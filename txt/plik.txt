@@ -9,5 +9,20 @@ B = 6;
 B + "a";
 
 
+ala = 5;
 while(B < "b")
-    print 1;
+    print ala;
+
+
+for j = 1:10 
+    print j;
+
+E = -5;
+E += 4;
+C = [[1,2],[1,2]];
+D = C+C'; 
+
+zeros(2) + [[1,2],[1,2]];
+#break;
+
+

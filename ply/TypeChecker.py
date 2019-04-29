@@ -103,6 +103,20 @@ class TypeChecker(NodeVisitor):
             print_error("Bad argument for matrix special method", node)
             return None
 
+    def visit_Transpose(self,node):
+        expr = self.visit(node.expr)
+        if(type(expr) != MatrixSymbol):
+            print_error("Bad argument for transpose", node)
+            return None
+        return expr
+
+    def visit_UMinus(self,node):
+        expr = self.visit(node.expr)
+        if(expr == None):
+            print_error("Bad argument for uminus", node)
+            return None
+        return expr
+
     def visit_IntNum(self,node):
         return IntNumSymbol()
 
@@ -153,8 +167,10 @@ class TypeChecker(NodeVisitor):
             print_error("Bad condition while loop", node)
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
-        self.visit(node.ifTrue)
+        ifTrue = self.visit(node.ifTrue)
         symbol_table = symbol_table.popScope()
+        if(ifTrue == None):
+            print_error("Bad ifTrue while loop",node)
 
     def visit_For(self,node):
         global symbol_table
@@ -168,8 +184,10 @@ class TypeChecker(NodeVisitor):
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         symbol_table.put(node.id.name, IdSymbol(node.id.name, IntNumSymbol()))
-        self.visit(node.expr)
+        expr = self.visit(node.expr)
         symbol_table = symbol_table.getParentScope()
+        if(expr == None):
+            print_error("Bad expr for loop", node)
 
     def visit_If(self,node):
         global symbol_table
