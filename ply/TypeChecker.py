@@ -27,7 +27,6 @@ class NodeVisitor(object):
 
 class TypeChecker(NodeVisitor):
     global symbol_table
-    # podana jako argument 1 bo cos trzeba podac do konstruktora
     symbol_table = SymbolTable(1, "global")
     global generate_scope_name
     generate_scope_name = 1
@@ -90,7 +89,7 @@ class TypeChecker(NodeVisitor):
             isinstance(right, IntNumSymbol) or
             isinstance(right, RefSymbol) or
             isinstance(right, MatrixSymbol)):
-            symbol_table.put(left, right)
+            symbol_table.put(left.name, right)
         else:
             #print_error("Assignment bad value", node)
             return None
@@ -149,7 +148,9 @@ class TypeChecker(NodeVisitor):
     def visit_While(self,node):
         global symbol_table
         global generate_scope_name
-        self.visit(node.condition)
+        condition = self.visit(node.condition)
+        if(condition == None):
+            print_error("Bad condition while loop", node)
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         self.visit(node.ifTrue)
@@ -180,7 +181,9 @@ class TypeChecker(NodeVisitor):
         symbol_table = symbol_table.popScope()
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
-        ifFalse = self.visit(node.ifFalse)
+        ifFalse = node.ifFalse
+        if(node.ifFalse != ""):
+            ifFalse = self.visit(node.ifFalse)
         symbol_table = symbol_table.popScope()
         if (condition == None):
             print_error("Bad condition for if", node)

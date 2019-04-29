@@ -37,11 +37,6 @@ class IfSymbol(Symbol):
 class RefSymbol(Symbol):
     pass
 
-# chyba lepiej bedzie zwracac  IntNumSymbol lub cos takiego
-class BinExprSymbol(Symbol):
-    def __init__(self, resultType):
-        self.resultType = resultType
-
 class IntNumSymbol(Symbol):
     pass
 
@@ -52,9 +47,6 @@ class StringSymbol(Symbol):
     pass
 
 
-# luzna koncepcja SymbolTable. Ma ona chyba zawierac nazwe zmiennej lub funkcji
-# oraz jej instancje jako Symbol. Ponizej link do rysunku, ktory ma troche sensu
-# https://www.javatpoint.com/data-structure-for-symbol-table
 class SymbolTable(object):
 
     def __init__(self, parent, name):
@@ -68,11 +60,23 @@ class SymbolTable(object):
             data = { 'name': [''], 'symbol': [Symbol()] }
         )
 
+    # def put(self, name, symbol):
+    #     # put variable symbol or fundef under <name> entry
+    #     self.table = self.table[self.table.name != name]
+    #     self.table = self.table.append(
+    #         { 'name': name, 'symbol': symbol },
+    #         ignore_index = True
+    #     )
+
     def put(self, name, symbol):
-        # put variable symbol or fundef under <name> entry
-        # powinno usuwac wczesniejsza wartosc jesli istnieje
-        self.table = self.table[self.table.name != name]
-        self.table = self.table.append(
+        current_scope = self
+        while(current_scope.name != "global"):
+            if(current_scope.get(name) != None):
+                break
+            current_scope = current_scope.getParentScope()
+            
+        current_scope.table = current_scope.table[current_scope.table.name != name]
+        current_scope.table = current_scope.table.append(
             { 'name': name, 'symbol': symbol },
             ignore_index = True
         )
