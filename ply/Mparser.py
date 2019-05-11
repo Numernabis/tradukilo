@@ -3,7 +3,7 @@
 import scanner
 import ply.yacc as yacc
 from AST import *
-
+import sys
 tokens = scanner.tokens
 
 precedence = (
@@ -22,6 +22,7 @@ def p_error(p):
         print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, p.lexpos, p.type, p.value))
     else:
         print("Unexpected end of input")
+    sys.exit()
 
 def p_program(p):
     """program : instr_rec

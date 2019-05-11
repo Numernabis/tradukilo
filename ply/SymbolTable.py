@@ -34,6 +34,18 @@ class AssignSymbol(Symbol):
 class IfSymbol(Symbol):
     pass
 
+class BlockSymbol(Symbol):
+    pass
+
+class WhileSymbol(Symbol):
+    pass
+
+class ForSymbol(Symbol):
+    pass
+
+class ReturnSymbol(Symbol):
+    pass
+    
 class RefSymbol(Symbol):
     pass
 
@@ -46,6 +58,11 @@ class FloatNumSymbol(Symbol):
 class StringSymbol(Symbol):
     pass
 
+class BreakSymbol(Symbol):
+    pass
+
+class ContinueSymbol(Symbol):
+    pass
 
 class SymbolTable(object):
 
@@ -70,11 +87,14 @@ class SymbolTable(object):
 
     def put(self, name, symbol):
         current_scope = self
+        flag = False
         while(current_scope.name != "global"):
             if(current_scope.get(name) != None):
+                flag = True
                 break
             current_scope = current_scope.getParentScope()
-            
+        if(flag == False):
+            current_scope = self
         current_scope.table = current_scope.table[current_scope.table.name != name]
         current_scope.table = current_scope.table.append(
             { 'name': name, 'symbol': symbol },

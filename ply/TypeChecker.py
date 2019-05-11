@@ -11,6 +11,7 @@ class NodeVisitor(object):
         return visitor(node)
 
     def generic_visit(self, node):
+        # return Symbol()
          # called if no explicit visitor function exists for a node
         if isinstance(node, list):
             for elem in node:
@@ -117,6 +118,12 @@ class TypeChecker(NodeVisitor):
             return None
         return expr
 
+    def visit_Break(self,node):
+        return BreakSymbol()
+
+    def visit_Continue(self,node):
+        return ContinueSymbol()
+
     def visit_IntNum(self,node):
         return IntNumSymbol()
 
@@ -156,8 +163,11 @@ class TypeChecker(NodeVisitor):
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         for expr in node.exprs:
-            self.visit(expr)
+            if self.visit(expr) == None:
+                print_error("Bad expr in block", node)
+                return None
         symbol_table = symbol_table.popScope()
+        return BlockSymbol()
 
     def visit_While(self,node):
         global symbol_table
@@ -171,6 +181,7 @@ class TypeChecker(NodeVisitor):
         symbol_table = symbol_table.popScope()
         if(ifTrue == None):
             print_error("Bad ifTrue while loop",node)
+        return WhileSymbol()
 
     def visit_For(self,node):
         global symbol_table
@@ -188,6 +199,8 @@ class TypeChecker(NodeVisitor):
         symbol_table = symbol_table.getParentScope()
         if(expr == None):
             print_error("Bad expr for loop", node)
+            return None
+        return ForSymbol()
 
     def visit_If(self,node):
         global symbol_table
@@ -228,6 +241,7 @@ class TypeChecker(NodeVisitor):
         if (return_value == None):
             print_error("Bad return value", node)
             return None
+        return ReturnSymbol()
 
 
     def visit_Ref(self,node):

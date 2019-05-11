@@ -5,6 +5,7 @@ import scanner  # scanner.py is a file you create, (it is not an external librar
 import Mparser
 from TreePrinter import TreePrinter
 from TypeChecker import TypeChecker
+from Interpreter import Interpreter
 
 
 if __name__ == '__main__':
@@ -38,9 +39,14 @@ if __name__ == '__main__':
     #     i.printTree()
     
     # Below code shows how to use visitor
-    typeChecker = TypeChecker()   
-    typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
-
+    typeChecker = TypeChecker() 
+    # print(typeChecker.visit(ast))   # or alternatively ast.accept(typeChecker)
+    for node in ast:
+        if typeChecker.visit(node) == None:
+            sys.exit()
+    interpreter = Interpreter()
+    for node in ast:
+        interpreter.visit(node)
     # i = 0
     # while (i < len(p)):
     #     a = p[i]
