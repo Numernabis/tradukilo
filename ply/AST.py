@@ -55,6 +55,13 @@ class BinExpr(Node):
         self.right = right
         self.line = line
 
+class DotExpr(Node):
+    def __init__(self, op, left, right, line):
+        self.op = op
+        self.left = left
+        self.right = right
+        self.line = line
+
 class Assign(Node):
     def __init__(self, assignType, left, right, line):
         self.assignType = assignType
@@ -103,7 +110,7 @@ class Ref(Node):
 class Break(Node):
     def __init__(self, name, line):
         self.name = name
-        self.line = line        
+        self.line = line
 
 class Continue(Node):
     def __init__(self, name, line):

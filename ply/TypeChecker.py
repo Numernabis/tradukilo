@@ -41,32 +41,39 @@ class TypeChecker(NodeVisitor):
         op = node.op
         type_left = type(left)
         type_right = type(right)
-        if (type_left == type_right):
-            if (type_left != MatrixSymbol):
-                return type_left
-            else:
-                if ((op == "+" or op == "-") and
-                    left.type == right.type and
-                    left.width == right.width and
-                    left.height == right.height):
-                    return left
-                elif (op == "*" and
-                    left.type == right.type and
-                    left.width == right.height):
-                    # save Matrix with proper dimensions
-                    return MatrixSymbol(left.height,right.width,right.type)
-                else:
-                    print_error("Uncompatible dimensions for BinExpr", node)
-                    return None
-
-        elif (type_right == MatrixSymbol):
-            if (op == "*" and type_left == right.type):
-                return right
-            else:
-                print_error("Uncompatible types for BinExpr", node)
-            return None
+        if (type_left != MatrixSymbol and type_right != MatrixSymbol):
+            return type_left
+        elif (type_left == MatrixSymbol and type_right == IntNumSymbol):
+            return MatrixSymbol(left.height,left.width,left.type)
         else:
             print_error("Bad types for BinExpr", node)
+            return None
+
+    def visit_DotExpr(self, node):
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        if (left == None or right == None):
+            print_error("Bad argument(s) for DotExpr", node)
+            return None
+        op = node.op
+        type_left = type(left)
+        type_right = type(right)
+        if (type_left == MatrixSymbol and type_right == MatrixSymbol):
+            if ((op == ".+" or op == ".-") and
+                left.type == right.type and
+                left.width == right.width and
+                left.height == right.height):
+                return left
+            elif (op == ".*" and
+                left.type == right.type and
+                left.width == right.height):
+                # save Matrix with proper dimensions
+                return MatrixSymbol(left.height,right.width,right.type)
+            else:
+                print_error("Uncompatible dimensions for DotExpr", node)
+                return None
+        else:
+            print_error("Bad types for DotExpr", node)
             return None
 
     def visit_Assign(self,node):
@@ -117,12 +124,6 @@ class TypeChecker(NodeVisitor):
             print_error("Bad argument for uminus", node)
             return None
         return expr
-
-    def visit_Break(self,node):
-        return BreakSymbol()
-
-    def visit_Continue(self,node):
-        return ContinueSymbol()
 
     def visit_IntNum(self,node):
         return IntNumSymbol()
@@ -227,6 +228,12 @@ class TypeChecker(NodeVisitor):
             return None
         return IfSymbol()
 
+
+    def visit_Break(self,node):
+        return BreakSymbol()
+
+    def visit_Continue(self,node):
+        return ContinueSymbol()
 
     def visit_Print(self,node):
         for cell in node.cells:

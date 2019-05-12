@@ -124,7 +124,7 @@ def p_expr_dot(p):
             | expr DOTSUB expr
             | expr DOTDIV expr
             | expr DOTMUL expr"""
-    p[0] = BinExpr(p[2], p[1], p[3], p.lineno(2))
+    p[0] = DotExpr(p[2], p[1], p[3], p.lineno(2))
 
 def p_expr_rel(p):
     """expr_rel : expr GTE expr

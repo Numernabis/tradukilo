@@ -1,10 +1,10 @@
-
+import sys
+import numpy as np
 import AST
 import SymbolTable
 from Memory import *
 from Exceptions import  *
 from visit import *
-import sys
 
 sys.setrecursionlimit(10000)
 
@@ -21,6 +21,33 @@ class Interpreter(object):
         '>=': lambda a, b : a >= b,
         '==': lambda a, b : a == b,
         '!=': lambda a, b : a != b,
+    }
+
+    global dotadd
+    def dotadd(a,b, minus):
+        matrix = a
+        for i in range(0,len(a)):
+            for j in range(0,len(a[i])):
+                if (minus):
+                    matrix[i][j] = a[i][j] - b[i][j]
+                else:
+                    matrix[i][j] = a[i][j] + b[i][j]
+        return matrix
+
+    global dotmul
+    def dotmul(a,b, division):
+        if (division):
+            # TODO: transpose b
+            print('division')
+        # TODO - implement proper multiplication
+        pass
+
+    global dot_op
+    dot_op = {
+        '.*': lambda a, b : dotmul(a,b, False),
+        '.-': lambda a, b : dotadd(a,b, True),
+        '.+': lambda a, b : dotadd(a,b, False),
+        './': lambda a, b : dotmul(a,b, True),
     }
 
     global re_assign_op
@@ -46,6 +73,15 @@ class Interpreter(object):
         else:
             return None
 
+    @when(AST.DotExpr)
+    def visit(self, node):
+        r1 = self.visit(node.left)
+        r2 = self.visit(node.right)
+        if(node.op in dot_op):
+            return dot_op.get(node.op)(r1,r2)
+        else:
+            return None
+
     @when(AST.Assign)
     def visit(self, node):
         right = self.visit(node.right)
@@ -60,15 +96,21 @@ class Interpreter(object):
         else:
             return None
 
-    @when(AST.Id)
+    @when(AST.MatrixSpecialMethod)
     def visit(self, node):
-        return self.memory_stack.get(node.name)
+        # TODO
+        pass
+
+    @when(AST.Transpose)
+    def visit(self, node):
+        # TODO
+        pass
+
+    @when(AST.UMinus)
+    def visit(self, node):
+        return self.visit(node.expr)*(-1)
 
     @when(AST.IntNum)
-    def visit(self,node):
-        return node.value
-    
-    @when(AST.String)
     def visit(self,node):
         return node.value
 
@@ -76,9 +118,31 @@ class Interpreter(object):
     def visit(self,node):
         return node.value
 
-    @when(AST.UMinus)
+    @when(AST.String)
+    def visit(self,node):
+        return node.value
+
+    @when(AST.Id)
     def visit(self, node):
-        return self.visit(node.expr)*(-1)
+        return self.memory_stack.get(node.name)
+
+    @when(AST.Matrix)
+    def visit(self, node):
+        matrix = []
+        for row in node.rows:
+            matrix_row = []
+            for cell in row:
+                matrix_row.append(cell.value)
+            matrix.append(matrix_row)
+        return matrix
+        pass
+
+    @when(AST.Block)
+    def visit(self, node):
+        self.memory_stack.push(Memory("block"))
+        for expr in node.exprs:
+            self.visit(expr)
+        self.memory_stack.pop()
 
     @when(AST.While)
     def visit(self, node):
@@ -120,17 +184,10 @@ class Interpreter(object):
         else:
             self.visit(node.ifFalse)
 
-    @when(AST.Block)
-    def visit(self, node):
-        self.memory_stack.push(Memory("block"))
-        for expr in node.exprs:
-            self.visit(expr)
-        self.memory_stack.pop()
-
     @when(AST.Break)
     def visit(self, node):
         raise BreakException()
-    
+
     @when(AST.Continue)
     def visit(self, node):
         raise ContinueException()
@@ -140,5 +197,13 @@ class Interpreter(object):
         for cell in node.cells:
             toPrint = self.visit(cell)
             print(toPrint)
-    
 
+    @when(AST.Return)
+    def visit(self, node):
+        # TODO
+        pass
+
+    @when(AST.Ref)
+    def visit(self, node):
+        # TODO
+        pass
