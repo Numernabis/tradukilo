@@ -5,7 +5,6 @@ import SymbolTable
 from Memory import *
 from Exceptions import  *
 from visit import *
-
 sys.setrecursionlimit(10000)
 
 class Interpreter(object):
@@ -37,10 +36,8 @@ class Interpreter(object):
     global dotmul
     def dotmul(a,b, division):
         if (division):
-            # TODO: transpose b
-            print('division')
-        # TODO - implement proper multiplication
-        pass
+            b = np.transpose(b)
+        return np.matmul(a,b)
 
     global dot_op
     dot_op = {
@@ -57,6 +54,7 @@ class Interpreter(object):
         '+=': lambda a, b : a + b,
         '/=': lambda a, b : a / b,
     }
+
     def __init__(self): # memory name
         self.memory_stack = MemoryStack()
 
@@ -68,7 +66,7 @@ class Interpreter(object):
     def visit(self, node):
         r1 = self.visit(node.left)
         r2 = self.visit(node.right)
-        if(node.op in bin_op):
+        if (node.op in bin_op):
             return bin_op.get(node.op)(r1,r2)
         else:
             return None
@@ -77,7 +75,7 @@ class Interpreter(object):
     def visit(self, node):
         r1 = self.visit(node.left)
         r2 = self.visit(node.right)
-        if(node.op in dot_op):
+        if (node.op in dot_op):
             return dot_op.get(node.op)(r1,r2)
         else:
             return None
@@ -85,26 +83,34 @@ class Interpreter(object):
     @when(AST.Assign)
     def visit(self, node):
         right = self.visit(node.right)
-        if(node.assignType == '='):
-            self.memory_stack.insert(node.left.name, right)
-        elif node.assignType in re_assign_op:
-            idValue = self.memory_stack.get(node.left.name)
-            self.memory_stack.insert(
-                node.left.name,
-                re_assign_op.get(node.assignType)(idValue,right)
-            )
+        name = node.left.name
+        assignType = node.assignType
+        if (assignType == '='):
+            self.memory_stack.insert(name, right)
+        elif assignType in re_assign_op:
+            idValue = self.memory_stack.get(name)
+            newValue = re_assign_op.get(assignType)(idValue,right)
+            self.memory_stack.insert(name, newValue)
         else:
             return None
 
     @when(AST.MatrixSpecialMethod)
     def visit(self, node):
-        # TODO
-        pass
+        method = node.method
+        size = node.size.value
+        if method == "zeros":
+            return np.zeros((size,size))
+        elif method == "ones":
+            return np.ones((size,size))
+        elif method == "eye":
+            return np.eye(size)
+        else:
+            return None
 
     @when(AST.Transpose)
     def visit(self, node):
-        # TODO
-        pass
+        matrix = self.visit(node.expr)
+        return np.transpose(matrix)
 
     @when(AST.UMinus)
     def visit(self, node):
@@ -135,7 +141,6 @@ class Interpreter(object):
                 matrix_row.append(cell.value)
             matrix.append(matrix_row)
         return matrix
-        pass
 
     @when(AST.Block)
     def visit(self, node):
@@ -161,7 +166,7 @@ class Interpreter(object):
 
     @when(AST.For)
     def visit(self, node):
-        self.memory_stack.push(Memory("while"))
+        self.memory_stack.push(Memory("for"))
         firstIndex = self.visit(node.firstIndex)
         secondIndex = self.visit(node.secondIndex)
         for value in range(firstIndex, secondIndex):
@@ -174,7 +179,6 @@ class Interpreter(object):
                 break
             except ContinueException:
                 continue
-
         self.memory_stack.pop()
 
     @when(AST.If)
@@ -200,10 +204,13 @@ class Interpreter(object):
 
     @when(AST.Return)
     def visit(self, node):
-        # TODO
-        pass
+        toReturn = self.visit(node.expr)
+        print("return " + str(toReturn))
+        sys.exit(toReturn)
 
     @when(AST.Ref)
     def visit(self, node):
-        # TODO
-        pass
+        id = self.visit(node.id)
+        index1 = self.visit(node.firstIndex)
+        index2 = self.visit(node.secondIndex)
+        return id[index1][index2]

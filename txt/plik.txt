@@ -10,11 +10,11 @@ if(2<2)
 }
 else{
     print "false";
-    print "false";
 }
 for i=1:10{
     break;
 }
+#return 5 - 1;
 
 while(1 < 2){
     C = 5;
@@ -31,5 +31,16 @@ z = x .+ y;
 print z;
 
 h = [ [1,2] ] * 5;
-# g = [ [5,3] ] .* [ [4], [3] ];
+
+g = [ [5,3], [2,3] ] .* [ [4], [3] ];
 print g;
+t = [ [5,3], [2,3] ] ./ [ [4,3] ];
+print t;
+
+print z[1,1];
+
+print z';
+
+print zeros(3);
+print ones(3);
+print eye(3);

@@ -96,7 +96,7 @@ def p_expr_6(p):
 
 def p_expr_7(p):
     """expr : '-' expr %prec UMINUS"""
-    p[0] = UMinus(p[2], p.lineno(2))
+    p[0] = UMinus(p[2], p.lineno(1))
 
 def p_expr_8(p):
     """expr : expr '\\''"""

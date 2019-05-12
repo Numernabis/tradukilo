@@ -39,14 +39,15 @@ if __name__ == '__main__':
     #     i.printTree()
 
     # -------- analiza semantyczna -----------
+    analisisPositive = True
     typeChecker = TypeChecker()
-    typeChecker.visit(ast)
-    # for node in ast:
-    #     if typeChecker.visit(node) == None:
-    #         sys.exit()
+    for node in ast:
+        if typeChecker.visit(node) == None:
+            analisisPositive = False
 
     # ------------- interpreter --------------
-    interpreter = Interpreter()
-    for node in ast:
-        interpreter.visit(node)
+    if (analisisPositive):
+        interpreter = Interpreter()
+        for node in ast:
+            interpreter.visit(node)
     # ----------------------------------------

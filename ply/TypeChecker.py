@@ -45,6 +45,8 @@ class TypeChecker(NodeVisitor):
             return type_left
         elif (type_left == MatrixSymbol and type_right == IntNumSymbol):
             return MatrixSymbol(left.height,left.width,left.type)
+        elif (type_left == IntNumSymbol and type_right == MatrixSymbol):
+            return MatrixSymbol(right.height,right.width,right.type)
         else:
             print_error("Bad types for BinExpr", node)
             return None
@@ -67,8 +69,13 @@ class TypeChecker(NodeVisitor):
             elif (op == ".*" and
                 left.type == right.type and
                 left.width == right.height):
-                # save Matrix with proper dimensions
+                # 2x3 .* 4x5 = 3x4
                 return MatrixSymbol(left.height,right.width,right.type)
+            elif (op == "./" and
+                left.type == right.type and
+                left.width == right.width):
+                # 3x2 ./ 4x2 = 3x2 .* 2x4 = 2x2
+                return MatrixSymbol(left.height,right.height,right.type)
             else:
                 print_error("Uncompatible dimensions for DotExpr", node)
                 return None
@@ -99,7 +106,7 @@ class TypeChecker(NodeVisitor):
             isinstance(right, MatrixSymbol)):
             symbol_table.put(left.name, right)
         else:
-            #print_error("Assignment bad value", node)
+            print_error("Assignment bad value", node)
             return None
         return AssignSymbol()
 
@@ -113,14 +120,14 @@ class TypeChecker(NodeVisitor):
 
     def visit_Transpose(self,node):
         expr = self.visit(node.expr)
-        if(type(expr) != MatrixSymbol):
+        if (type(expr) != MatrixSymbol):
             print_error("Bad argument for transpose", node)
             return None
         return expr
 
     def visit_UMinus(self,node):
         expr = self.visit(node.expr)
-        if(expr == None):
+        if (expr == None):
             print_error("Bad argument for uminus", node)
             return None
         return expr
@@ -174,14 +181,16 @@ class TypeChecker(NodeVisitor):
         global symbol_table
         global generate_scope_name
         condition = self.visit(node.condition)
-        if(condition == None):
+        if (condition == None):
             print_error("Bad condition while loop", node)
+            return None
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         ifTrue = self.visit(node.ifTrue)
         symbol_table = symbol_table.popScope()
-        if(ifTrue == None):
+        if (ifTrue == None):
             print_error("Bad ifTrue while loop",node)
+            return None
         return WhileSymbol()
 
     def visit_For(self,node):
@@ -192,13 +201,12 @@ class TypeChecker(NodeVisitor):
         if (firstIndex == None or secondIndex == None):
             print_error("Bad range in for loop", node)
             return None
-
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         symbol_table.put(node.id.name, IdSymbol(node.id.name, IntNumSymbol()))
         expr = self.visit(node.expr)
         symbol_table = symbol_table.getParentScope()
-        if(expr == None):
+        if (expr == None):
             print_error("Bad expr for loop", node)
             return None
         return ForSymbol()
@@ -214,9 +222,10 @@ class TypeChecker(NodeVisitor):
         symbol_table = symbol_table.pushScope(generate_scope_name)
         generate_scope_name += 1
         ifFalse = node.ifFalse
-        if(node.ifFalse != ""):
+        if (node.ifFalse != ""):
             ifFalse = self.visit(node.ifFalse)
         symbol_table = symbol_table.popScope()
+
         if (condition == None):
             print_error("Bad condition for if", node)
             return None
@@ -227,7 +236,6 @@ class TypeChecker(NodeVisitor):
             print_error("Bad expr in else", node)
             return None
         return IfSymbol()
-
 
     def visit_Break(self,node):
         return BreakSymbol()
@@ -249,7 +257,6 @@ class TypeChecker(NodeVisitor):
             print_error("Bad return value", node)
             return None
         return ReturnSymbol()
-
 
     def visit_Ref(self,node):
         id_value = self.visit(node.id)
