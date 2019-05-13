@@ -80,8 +80,29 @@ class Interpreter(object):
         else:
             return None
 
+    global visit_Assign_Ref
+    def visit_Assign_Ref(self, node):
+        left = node.left
+        right = self.visit(node.right)
+        assignType = node.assignType
+        id = left.id.name
+        matrix = self.memory_stack.get(id)
+        firstIndex = self.visit(left.firstIndex)
+        secondIndex = self.visit(left.secondIndex)
+        if (assignType == '='):
+            matrix[firstIndex][secondIndex] = right
+            self.memory_stack.insert(id, matrix)
+        elif assignType in re_assign_op:
+            newValue = re_assign_op.get(assignType)(matrix[firstIndex][secondIndex],right)
+            matrix[firstIndex][secondIndex] = newValue
+            self.memory_stack.insert(id, matrix)
+        else:
+            return None
+
     @when(AST.Assign)
     def visit(self, node):
+        if(type(node.left) == AST.Ref):
+            return visit_Assign_Ref(self, node)
         right = self.visit(node.right)
         name = node.left.name
         assignType = node.assignType
@@ -93,6 +114,7 @@ class Interpreter(object):
             self.memory_stack.insert(name, newValue)
         else:
             return None
+    
 
     @when(AST.MatrixSpecialMethod)
     def visit(self, node):

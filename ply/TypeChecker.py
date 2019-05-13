@@ -83,10 +83,24 @@ class TypeChecker(NodeVisitor):
             print_error("Bad types for DotExpr", node)
             return None
 
+    global visit_Assign_Ref
+    def visit_Assign_Ref(self,node):
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        if(left == None):
+            print_error("Bad Ref in Assing", node)
+            return None
+        if(left.type != type(right)):
+            print_error("Bad types for Assign", node)
+            return None
+        return AssignSymbol()
+
     def visit_Assign(self,node):
         id_value = None
         left = node.left
         right = self.visit(node.right)
+        if(type(left) == Ref):
+            return visit_Assign_Ref(self,node)
         if (node.assignType != "="):
             id_value = take_id_value(left)
             if id_value == None:
@@ -281,7 +295,6 @@ class TypeChecker(NodeVisitor):
         else:
             print_error("Bad reference secondIndex", node)
             return None
-
         if (firstIndex > id_value.width or
             secondIndex > id_value.height):
             print_error("Bad reference to matrix", node)
@@ -290,7 +303,7 @@ class TypeChecker(NodeVisitor):
             print_error("Negative reference index", node)
             return None
         else:
-            return RefSymbol()
+            return RefSymbol(id_value.type)
 
 # ------------------------------------------------------------------
 

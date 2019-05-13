@@ -47,7 +47,8 @@ class ReturnSymbol(Symbol):
     pass
     
 class RefSymbol(Symbol):
-    pass
+    def __init__(self, type):
+        self.type = type
 
 class IntNumSymbol(Symbol):
     pass
